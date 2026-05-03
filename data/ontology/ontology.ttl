@@ -1,0 +1,2965 @@
+@prefix : <https://everythingisasign.com/ontology/eias-ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <https://everythingisasign.com/ontology/eias-ontology#> .
+
+<https://everythingisasign.com/ontology/eias-ontology> rdf:type owl:Ontology ;
+                                                        owl:versionIRI <https://everythingisasign.com/ontology/eias-ontology/1.0.0> ;
+                                                        owl:imports <http://www.w3.org/2004/02/skos/core> ,
+                                                                    <http://www.w3.org/2008/05/skos-xl> ;
+                                                        <http://purl.org/dc/terms/creator> "Emilio Enrique Suárez Hode" ;
+                                                        rdfs:comment "'Everything = a Sign' Ontology" .
+
+#################################################################
+#    Annotation properties
+#################################################################
+
+###  https://everythingisasign.com/ontology/eias-ontology#abstract
+:abstract rdf:type owl:AnnotationProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#description
+:description rdf:type owl:AnnotationProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#introduction
+:introduction rdf:type owl:AnnotationProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#rawText
+:rawText rdf:type owl:AnnotationProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#synopsis
+:synopsis rdf:type owl:AnnotationProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#taxonomy
+:taxonomy rdf:type owl:AnnotationProperty ;
+          rdfs:label "taxonomy" .
+
+
+#################################################################
+#    Datatypes
+#################################################################
+
+###  http://www.w3.org/2001/XMLSchema#date
+xsd:date rdf:type rdfs:Datatype .
+
+
+###  http://www.w3.org/2001/XMLSchema#gYear
+xsd:gYear rdf:type rdfs:Datatype .
+
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://www.w3.org/2004/02/skos/core#inScheme
+<http://www.w3.org/2004/02/skos/core#inScheme> rdfs:subPropertyOf owl:topObjectProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#citesAuthor
+:citesAuthor rdf:type owl:ObjectProperty ;
+             owl:inverseOf :isCitedInWork ;
+             rdfs:domain :Work ;
+             rdfs:range :Agent .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#citesWork
+:citesWork rdf:type owl:ObjectProperty ;
+           owl:inverseOf :isCitedByWork ;
+           rdf:type owl:IrreflexiveProperty ;
+           rdfs:domain :Work ;
+           rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#containedWithinWork
+:containedWithinWork rdf:type owl:ObjectProperty ;
+                     owl:inverseOf :containsWork ;
+                     rdfs:domain :Work ;
+                     rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#containsWork
+:containsWork rdf:type owl:ObjectProperty ;
+              rdfs:domain :Work ;
+              rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#creatorOf
+:creatorOf rdf:type owl:ObjectProperty ;
+           owl:inverseOf :hasCreator ;
+           rdf:type owl:IrreflexiveProperty ;
+           rdfs:domain :Agent ;
+           rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasCreator
+:hasCreator rdf:type owl:ObjectProperty ,
+                     owl:IrreflexiveProperty ;
+            rdfs:domain :Work ;
+            rdfs:range :Agent .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasFieldOfStudy
+:hasFieldOfStudy rdf:type owl:ObjectProperty ;
+                 rdfs:domain :Work ;
+                 rdfs:range <http://www.w3.org/2004/02/skos/core#Concept> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasMaterial
+:hasMaterial rdf:type owl:ObjectProperty ;
+             rdfs:domain :Work ;
+             rdfs:range <http://www.w3.org/2004/02/skos/core#Concept> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasMember
+:hasMember rdf:type owl:ObjectProperty ;
+           owl:inverseOf :memberOf ;
+           rdfs:domain :Organization ;
+           rdfs:range :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasMethod
+:hasMethod rdf:type owl:ObjectProperty ;
+           rdfs:domain :Work ;
+           rdfs:range <http://www.w3.org/2004/02/skos/core#Concept> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasTopic
+:hasTopic rdf:type owl:ObjectProperty ;
+          rdfs:domain :Work ;
+          rdfs:range <http://www.w3.org/2004/02/skos/core#Concept> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#hasWorkType
+:hasWorkType rdf:type owl:ObjectProperty ;
+             rdfs:domain :Work ;
+             rdfs:range <http://www.w3.org/2004/02/skos/core#Concept> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#introducesTopic
+:introducesTopic rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf :hasTopic ;
+                 <http://www.w3.org/2004/02/skos/core#definition> "Relation to assert a topics first introduction / mention." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#isCitedByWork
+:isCitedByWork rdf:type owl:ObjectProperty ,
+                        owl:IrreflexiveProperty ;
+               rdfs:domain :Work ;
+               rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#isCitedInWork
+:isCitedInWork rdf:type owl:ObjectProperty ;
+               rdfs:range :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#memberOf
+:memberOf rdf:type owl:ObjectProperty ;
+          rdfs:domain :Person ;
+          rdfs:range :Organization .
+
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  https://everythingisasign.com/ontology/eias-ontology#DOI
+:DOI rdf:type owl:DatatypeProperty ;
+     rdfs:subPropertyOf :Identifier ;
+     rdfs:domain :TextualWork ;
+     rdfs:range xsd:string .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ISBN
+:ISBN rdf:type owl:DatatypeProperty ;
+      rdfs:subPropertyOf :Identifier ;
+      rdfs:domain :Work ;
+      rdfs:range xsd:string .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ISBN_10
+:ISBN_10 rdf:type owl:DatatypeProperty ;
+         rdfs:subPropertyOf :ISBN .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ISBN_13
+:ISBN_13 rdf:type owl:DatatypeProperty ;
+         rdfs:subPropertyOf :ISBN .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Identifier
+:Identifier rdf:type owl:DatatypeProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Language
+:Language rdf:type owl:DatatypeProperty .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ORCID
+:ORCID rdf:type owl:DatatypeProperty ;
+       rdfs:subPropertyOf :Identifier ;
+       rdfs:domain :Person ;
+       rdfs:range xsd:string .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ObjectNumber
+:ObjectNumber rdf:type owl:DatatypeProperty ;
+              rdfs:subPropertyOf :Identifier .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#URL
+:URL rdf:type owl:DatatypeProperty ;
+     rdfs:subPropertyOf :Identifier .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#publicationDate
+:publicationDate rdf:type owl:DatatypeProperty ;
+                 rdfs:domain :Work ;
+                 rdfs:range [ rdf:type rdfs:Datatype ;
+                              owl:unionOf ( xsd:date
+                                            xsd:gYear
+                                          )
+                            ] ;
+                 rdfs:comment "Syntax: YYYY-MM-DD or YYYY" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#releaseYear
+:releaseYear rdf:type owl:DatatypeProperty ;
+             rdfs:domain :Work ;
+             rdfs:range xsd:gYear .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#wikidataQID
+:wikidataQID rdf:type owl:DatatypeProperty ;
+             rdfs:subPropertyOf :Identifier ;
+             rdfs:range xsd:string .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://www.w3.org/1999/02/22-rdf-syntax-ns#List
+rdf:List rdfs:subClassOf :SKOS_Entity .
+
+
+###  http://www.w3.org/2004/02/skos/core#Collection
+<http://www.w3.org/2004/02/skos/core#Collection> rdfs:subClassOf :SKOS_Entity .
+
+
+###  http://www.w3.org/2004/02/skos/core#Concept
+<http://www.w3.org/2004/02/skos/core#Concept> rdfs:subClassOf :SKOS_Entity .
+
+
+###  http://www.w3.org/2004/02/skos/core#ConceptScheme
+<http://www.w3.org/2004/02/skos/core#ConceptScheme> rdfs:subClassOf :SKOS_Entity .
+
+
+###  http://www.w3.org/2008/05/skos-xl#Label
+<http://www.w3.org/2008/05/skos-xl#Label> rdfs:subClassOf :SKOS_Entity .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Agent
+:Agent rdf:type owl:Class ;
+       rdfs:subClassOf :Entity .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#DocumentTypeConcept
+:DocumentTypeConcept rdf:type owl:Class ;
+                     rdfs:subClassOf :HELPER .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Entity
+:Entity rdf:type owl:Class ;
+        rdfs:subClassOf :OWL_Entity .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#FieldOfStudyConcept
+:FieldOfStudyConcept rdf:type owl:Class ;
+                     rdfs:subClassOf :HELPER .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#HELPER
+:HELPER rdf:type owl:Class .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Location
+:Location rdf:type owl:Class ;
+          rdfs:subClassOf :Entity .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MaterialConcept
+:MaterialConcept rdf:type owl:Class ;
+                 rdfs:subClassOf :HELPER .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MethodConcept
+:MethodConcept rdf:type owl:Class ;
+               rdfs:subClassOf :HELPER .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MultimediaWork
+:MultimediaWork rdf:type owl:Class ;
+                rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#OWL_Entity
+:OWL_Entity rdf:type owl:Class .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Organization
+:Organization rdf:type owl:Class ;
+              rdfs:subClassOf :Agent .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PerformativeWork
+:PerformativeWork rdf:type owl:Class ;
+                  rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Person
+:Person rdf:type owl:Class ;
+        rdfs:subClassOf :Agent ;
+        owl:disjointWith :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PhysicalWork
+:PhysicalWork rdf:type owl:Class ;
+              rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SKOS_Entity
+:SKOS_Entity rdf:type owl:Class .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SonicWork
+:SonicWork rdf:type owl:Class ;
+           rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#TextualWork
+:TextualWork rdf:type owl:Class ;
+             rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#TopicConcept
+:TopicConcept rdf:type owl:Class ;
+              rdfs:subClassOf :HELPER .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#VisualWork
+:VisualWork rdf:type owl:Class ;
+            rdfs:subClassOf :Work .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Work
+:Work rdf:type owl:Class ;
+      rdfs:subClassOf :Entity .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  http://purl.org/dc/dcmitype/Collection
+<http://purl.org/dc/dcmitype/Collection> rdf:type owl:NamedIndividual ,
+                                                  :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Dataset
+<http://purl.org/dc/dcmitype/Dataset> rdf:type owl:NamedIndividual ,
+                                               :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Event
+<http://purl.org/dc/dcmitype/Event> rdf:type owl:NamedIndividual ,
+                                             :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Image
+<http://purl.org/dc/dcmitype/Image> rdf:type owl:NamedIndividual ,
+                                             :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/InteractiveResource
+<http://purl.org/dc/dcmitype/InteractiveResource> rdf:type owl:NamedIndividual ,
+                                                           :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/MovingImage
+<http://purl.org/dc/dcmitype/MovingImage> rdf:type owl:NamedIndividual ,
+                                                   :DocumentTypeConcept ;
+                                          <http://www.w3.org/2004/02/skos/core#broader> <http://purl.org/dc/dcmitype/Image> .
+
+
+###  http://purl.org/dc/dcmitype/PhysicalObject
+<http://purl.org/dc/dcmitype/PhysicalObject> rdf:type owl:NamedIndividual ,
+                                                      :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Service
+<http://purl.org/dc/dcmitype/Service> rdf:type owl:NamedIndividual ,
+                                               :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Software
+<http://purl.org/dc/dcmitype/Software> rdf:type owl:NamedIndividual ,
+                                                :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/Sound
+<http://purl.org/dc/dcmitype/Sound> rdf:type owl:NamedIndividual ,
+                                             :DocumentTypeConcept .
+
+
+###  http://purl.org/dc/dcmitype/StillImage
+<http://purl.org/dc/dcmitype/StillImage> rdf:type owl:NamedIndividual ,
+                                                  :DocumentTypeConcept ;
+                                         <http://www.w3.org/2004/02/skos/core#broader> <http://purl.org/dc/dcmitype/Image> .
+
+
+###  http://purl.org/dc/dcmitype/Text
+<http://purl.org/dc/dcmitype/Text> rdf:type owl:NamedIndividual ,
+                                            :DocumentTypeConcept .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#A_Thousand_Plateaus_Capitalism_and_Schizophrenia
+:A_Thousand_Plateaus_Capitalism_and_Schizophrenia rdf:type owl:NamedIndividual ,
+                                                           :TextualWork ,
+                                                           :Work ;
+                                                  :hasCreator :Gilles_Deleuze ;
+                                                  :ISBN "9781780935379" ;
+                                                  :publicationDate "1987"^^xsd:gYear ;
+                                                  <http://purl.org/dc/terms/creator> :Gilles_Deleuze ;
+                                                  :synopsis "A Thousand Plateaus continues the work Gilles Deleuze and Félix Guattari began in Anti-Oedipus and has now become established as one of the classic studies of the development of critical theory in the late twentieth century. It occupies an important place at the center of the debate reassessing the works of Freud and Marx, advancing an approach that is neither Freudian nor Marxist but which learns from both to find an entirely new and radical path. It presents an attempt to pioneer a variety of social and psychological analyses free of the philosophical encumbrances criticized by postmodern writers. A Thousand Plateaus is an essential text for feminists, literary theorists, social scientists, philosophers, and others interested in the problems of contemporary Western culture." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Adrienne_Rich
+:Adrienne_Rich rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :wikidataQID "https://www.wikidata.org/entity/Q270705" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Aesthetics
+:Aesthetics rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                           :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :FilmStudies ,
+                                                          :PerformanceStudies ,
+                                                          :Phenomenology ,
+                                                          :SonicArts ,
+                                                          :VisualArts ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Aesthetics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Alfred_North_Whitehead
+:Alfred_North_Whitehead rdf:type owl:NamedIndividual ,
+                                 :Person ;
+                        :wikidataQID "https://www.wikidata.org/entity/Q183372" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Andrea_Mubi_Brighenti
+:Andrea_Mubi_Brighenti rdf:type owl:NamedIndividual ,
+                                :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Andrew_D_Spear
+:Andrew_D_Spear rdf:type owl:NamedIndividual ,
+                         :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Anselm_Kieffer
+:Anselm_Kieffer rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q170344" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Anthropology
+:Anthropology rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Anthropology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#AppliedDesign
+:AppliedDesign rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :AppliedSciences ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Applied-Design"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Applied Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#AppliedOntology
+:AppliedOntology rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :DataScience ,
+                                                               :Epistemology ,
+                                                               :InformationScience ,
+                                                               :Logic ,
+                                                               :Metaphysics ,
+                                                               :ScienceAndTechnologyStudies ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Applied-Ontology"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Applied Ontology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#AppliedSciences
+:AppliedSciences rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#topConceptOf> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Applied-Sciences"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Applied Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Archeology
+:Archeology rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :History ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                           :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Archeology"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Archaeology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Architecture
+:Architecture rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ,
+                       :TopicConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                             :TopicScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :CivilEngineering ,
+                                                            :EnvironmentalScience ,
+                                                            :Infrastructure ,
+                                                            :Phenomenology ,
+                                                            :UrbanStudies ,
+                                                            :VisualArts ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Architectural"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Architecture"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Archive
+:Archive rdf:type owl:NamedIndividual ,
+                  :TopicConcept ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Archive"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ArtHistory
+:ArtHistory rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :History ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :Aesthetics ,
+                                                          :CulturalStudies ,
+                                                          :IntellectualHistory ,
+                                                          :VisualArts ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Art-History"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Art History"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Arts
+:Arts rdf:type owl:NamedIndividual ,
+               :FieldOfStudyConcept ;
+      <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+      <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+      <http://www.w3.org/2004/02/skos/core#prefLabel> "Arts"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Assemblage
+:Assemblage rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :Rhizome ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Assemblage"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Banal_Nationalism
+:Banal_Nationalism rdf:type owl:NamedIndividual ,
+                            :TextualWork ,
+                            :Work ;
+                   :hasCreator :Michael_Billig ;
+                   :ISBN_13 "9780803975255" ;
+                   :publicationDate "1995"^^xsd:gYear ;
+                   :synopsis """Michael Billig presents a major challenge to orthodox conceptions of nationalism in this elegantly written book. While traditional theorizing has tended to the focus on extreme expressions of nationalism, the author turns his attention to the everyday, less visible forms which are neither exotic or remote, he describes as `banal nationalism′ .
+The author asks why people do not forget their national identity. He suggests that in daily life nationalism is constantly flagged in the media through routine symbols and habits of language. Banal Nationalism is critical of orthodox theories in sociology, politics and social psychology for ignoring this core feature of national identity. Michael Billig argues forcefully that with nationalism continuing to be a major ideological force in the contemporary world, it is all the more important to recognize those signs of nationalism which are so familiar that they are easily overlooked.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Barry_Smith
+:Barry_Smith rdf:type owl:NamedIndividual ,
+                      :Person ;
+             :wikidataQID "https://www.wikidata.org/entity/Q809101" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Basic_Formal_Ontology_2_0_Specification_and_User_s_Guide
+:Basic_Formal_Ontology_2_0_Specification_and_User_s_Guide rdf:type owl:NamedIndividual ,
+                                                                   :Work ;
+                                                          :introduction "This document is a guide for those using Basic Formal Ontology (BFO) as an upper-level (formal, domain-neutral) ontology to support the creation of lower-level domain ontologies" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Basic_Formal_Ontology_Tutorial
+:Basic_Formal_Ontology_Tutorial rdf:type owl:NamedIndividual ,
+                                         :Work ;
+                                :hasCreator :Barry_Smith ;
+                                :URL "https://www.youtube.com/watch?v=GWkk5AfRCpM&t=9857s" ;
+                                :publicationDate "2025-04-26"^^xsd:date ;
+                                :description "Presented at the April 2025 meeting of the Industrial Ontologies Foundry." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Bela_Tarr
+:Bela_Tarr rdf:type owl:NamedIndividual ,
+                    :Person ;
+           :wikidataQID "https://www.wikidata.org/entity/Q312944" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Belonging
+:Belonging rdf:type owl:NamedIndividual ,
+                    :TopicConcept ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+           <http://www.w3.org/2004/02/skos/core#related> :Body ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Belonging"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Benedict_Anderson
+:Benedict_Anderson rdf:type owl:NamedIndividual ,
+                            :Person ;
+                   :wikidataQID "https://www.wikidata.org/entity/Q212993" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Biology
+:Biology rdf:type owl:NamedIndividual ,
+                  :FieldOfStudyConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :NaturalSciences ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Biology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Body
+:Body rdf:type owl:NamedIndividual ,
+               :TopicConcept ;
+      <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+      <http://www.w3.org/2004/02/skos/core#related> :Embodiment ,
+                                                    :Exhaustion ,
+                                                    :Feminism ;
+      <http://www.w3.org/2004/02/skos/core#prefLabel> "Body"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Borbala_Magdolna_Pal
+:Borbala_Magdolna_Pal rdf:type owl:NamedIndividual ,
+                               :Person ;
+                      :memberOf :Everything_equals_a_Sign .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#BorderStudies
+:BorderStudies rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :Geopolitics ,
+                                                             :InternationalLaw ,
+                                                             :MigrationStudies ,
+                                                             :PoliticalGeography ,
+                                                             :SecurityStudies ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Border-Studies"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Border Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Borders
+:Borders rdf:type owl:NamedIndividual ,
+                  :TopicConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :Politics ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+         <http://www.w3.org/2004/02/skos/core#related> :Sovereignty ,
+                                                       :Territory ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Borders"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Building_Ontologies_with_Basic_Formal_Ontology
+:Building_Ontologies_with_Basic_Formal_Ontology rdf:type owl:NamedIndividual ,
+                                                         :Work ;
+                                                :hasCreator :Andrew_D_Spear ,
+                                                            :Barry_Smith ,
+                                                            :Robert_Arp ;
+                                                :ISBN_13 "9780262527811" ;
+                                                :publicationDate "2015"^^xsd:gYear ;
+                                                :synopsis """An introduction to the field of applied ontology with examples derived particularly from biomedicine, covering theoretical components, design practices, and practical applications .
+
+In the era of “big data,” science is increasingly information driven, and the potential for computers to store, manage, and integrate massive amounts of data has given rise to such new disciplinary fields as biomedical informatics. Applied ontology offers a strategy for the organization of scientific information in computer-tractable form, drawing on concepts not only from computer and information science but also from linguistics, logic, and philosophy. This book provides an introduction to the field of applied ontology that is of particular relevance to biomedicine, covering theoretical components of ontologies, best practices for ontology design, and examples of biomedical ontologies in use .
+
+After defining an ontology as a representation of the types of entities in a given domain, the book distinguishes between different kinds of ontologies and taxonomies, and shows how applied ontology draws on more traditional ideas from metaphysics. It presents the core features of the Basic Formal Ontology (BFO), now used by over one hundred ontology projects around the world, and offers examples of domain ontologies that utilize BFO. The book also describes Web Ontology Language (OWL), a common framework for Semantic Web technologies. Throughout, the book provides concrete recommendations for the design and construction of domain ontologies.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Carolyn_Whitzman
+:Carolyn_Whitzman rdf:type owl:NamedIndividual ,
+                           :Person ;
+                  :wikidataQID "Q57413890" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Cartography
+:Cartography rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :Geography ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                            :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :GeographicInformationScience ,
+                                                           :GraphicDesign ,
+                                                           :InformationDesign ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Cartography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Chemistry
+:Chemistry rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :NaturalSciences ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Chemistry"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Citenzenship
+:Citenzenship rdf:type owl:NamedIndividual ,
+                       :TopicConcept ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :NationStates ,
+                                                            :NationalIdentity ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Citenzenship"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Citizenship"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#CivilEngineering
+:CivilEngineering rdf:type owl:NamedIndividual ,
+                           :FieldOfStudyConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :Engineering ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "Civil-Engineering"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "Civil Engineering"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Climatology
+:Climatology rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :EarthScience ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :Ecology ,
+                                                           :EnvironmentalScience ,
+                                                           :Geography ,
+                                                           :Geophysics ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Climatology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Colonialism
+:Colonialism rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Colonialism"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Committee_on_Mapping_and_Sequencing_the_Human_Genome
+:Committee_on_Mapping_and_Sequencing_the_Human_Genome rdf:type owl:NamedIndividual ,
+                                                               :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#CommunicationStudies
+:CommunicationStudies rdf:type owl:NamedIndividual ,
+                               :FieldOfStudyConcept ;
+                      <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                      <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                      <http://www.w3.org/2004/02/skos/core#altLabel> "Communication-Studies"@en ;
+                      <http://www.w3.org/2004/02/skos/core#prefLabel> "Communication Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ComparativeLiterature
+:ComparativeLiterature rdf:type owl:NamedIndividual ,
+                                :FieldOfStudyConcept ;
+                       <http://www.w3.org/2004/02/skos/core#broader> :Literature ;
+                       <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                       <http://www.w3.org/2004/02/skos/core#altLabel> "Comparative-Literature"@en ;
+                       <http://www.w3.org/2004/02/skos/core#prefLabel> "Comparative Literature"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Complexity
+:Complexity rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Complexity"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ComplexityScience
+:ComplexityScience rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :SystemsScience ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :Biology ,
+                                                                 :Cybernetics ,
+                                                                 :Economics ,
+                                                                 :NetworkScience ,
+                                                                 :SystemsEngineering ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Complexity-Science"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Complexity Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ComputationalSocialScience
+:ComputationalSocialScience rdf:type owl:NamedIndividual ,
+                                     :FieldOfStudyConcept ;
+                            <http://www.w3.org/2004/02/skos/core#broader> :DataScience ;
+                            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                            <http://www.w3.org/2004/02/skos/core#related> :MachineLearning ,
+                                                                          :MigrationStudies ,
+                                                                          :NetworkScience ,
+                                                                          :Sociology ,
+                                                                          :Statistics ;
+                            <http://www.w3.org/2004/02/skos/core#altLabel> "Computational-Social-Science"@en ;
+                            <http://www.w3.org/2004/02/skos/core#prefLabel> "Computational Social Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ComputerScience
+:ComputerScience rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :Logic ,
+                                                               :MachineLearning ,
+                                                               :Mathematics ,
+                                                               :SoftwareEngineering ,
+                                                               :TheoreticalComputerScience ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Computer-Science"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Computer Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ConventionalStandards
+:ConventionalStandards rdf:type owl:NamedIndividual ,
+                                :TopicConcept ;
+                       <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                       <http://www.w3.org/2004/02/skos/core#altLabel> "Conventional-Standards"@en ;
+                       <http://www.w3.org/2004/02/skos/core#prefLabel> "Conventional Standards"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#CriticalTheory
+:CriticalTheory rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :CulturalStudies ,
+                                                              :GenderStudies ,
+                                                              :MediaStudies ,
+                                                              :PoliticalTheory ,
+                                                              :Sociology ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Critical-Theory"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Critical Theory"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#CulturalGeography
+:CulturalGeography rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :Geography ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :Anthropology ,
+                                                                 :ArtHistory ,
+                                                                 :CulturalStudies ,
+                                                                 :SocialGeography ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Cultural-Geography"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Cultural Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#CulturalStudies
+:CulturalStudies rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :CriticalTheory ,
+                                                               :GenderStudies ,
+                                                               :MediaStudies ,
+                                                               :Semiotics ,
+                                                               :Sociology ,
+                                                               :VisualArts ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Cultural-Studies"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Cultural Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Cybernetics
+:Cybernetics rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :SystemsScience ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :ComplexityScience ,
+                                                           :Engineering ,
+                                                           :Neuroscience ,
+                                                           :Psychology ,
+                                                           :SystemsEngineering ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Cybernetics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Damnation
+:Damnation rdf:type owl:NamedIndividual ,
+                    :MultimediaWork ,
+                    :Work ;
+           :hasCreator :Bela_Tarr ;
+           :releaseYear "1989"^^xsd:gYear .
+
+[ rdf:type owl:Axiom ;
+   owl:annotatedSource :Damnation ;
+   owl:annotatedProperty :hasCreator ;
+   owl:annotatedTarget :Bela_Tarr ;
+   rdfs:comment "Tarr Béla acted as the 'Director', not 'Author' of 'Damnation'"
+ ] .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#DataScience
+:DataScience rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :AppliedOntology ,
+                                                           :InformationScience ,
+                                                           :Statistics ,
+                                                           :SystemsScience ,
+                                                           :TheoreticalComputerScience ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Data-Science"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Data Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#DataVisualization
+:DataVisualization rdf:type owl:NamedIndividual ,
+                            :MethodConcept ,
+                            :TopicConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :VisualCommunication ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :Maps ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Data Visualization"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#David_Foster_Wallace
+:David_Foster_Wallace rdf:type owl:NamedIndividual ,
+                               :Person ;
+                      :wikidataQID "https://www.wikidata.org/entity/Q313246" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#De_Profundis
+:De_Profundis rdf:type owl:NamedIndividual ,
+                       :VisualWork ,
+                       :Work ;
+              :hasCreator :Lili_Orszag .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Decolonialism
+:Decolonialism rdf:type owl:NamedIndividual ,
+                        :TopicConcept ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :Colonialism ,
+                                                             :Feminism ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Decolonialism"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Derive
+:Derive rdf:type owl:NamedIndividual ,
+                 :TopicConcept ;
+        <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+        <http://www.w3.org/2004/02/skos/core#related> :UrbanSpaces ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel> "Derive"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Diagram
+:Diagram rdf:type owl:NamedIndividual ,
+                  :TopicConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :VisualCommunication ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+         <http://www.w3.org/2004/02/skos/core#related> :Graphs-Web ,
+                                                       :Maps ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Diagram"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Dialectics
+:Dialectics rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Dialectics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#DigitalHumanities
+:DigitalHumanities rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :ArtHistory ,
+                                                                 :CulturalStudies ,
+                                                                 :DataScience ,
+                                                                 :InformationScience ,
+                                                                 :MediaStudies ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Digital-Humanities"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Digital Humanities"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#DocumentTypeScheme
+:DocumentTypeScheme rdf:type owl:NamedIndividual ,
+                             <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Donald_J_Trump
+:Donald_J_Trump rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/wiki/Q22686" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Dylan_Trigg
+:Dylan_Trigg rdf:type owl:NamedIndividual ,
+                      :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#EGY_FARADT_NEMZET_A_FRAMED_HAUNTING
+:EGY_FARADT_NEMZET_A_FRAMED_HAUNTING rdf:type owl:NamedIndividual ,
+                                              :TextualWork ,
+                                              :Work ;
+                                     :citesWork :Banal_Nationalism ,
+                                                :Damnation ,
+                                                :De_Profundis ,
+                                                :Frames_of_War_When_Is_Life_Grievable ,
+                                                :Hannah_Arendt_Stanford_Encyclopedia_of_Philosophy ,
+                                                :Hauntings_from_the_Future_Ghosts_Time_Travellers_Extraterrestrials ,
+                                                :Imagined_Communities_Reflections_on_the_Origin_and_Spread_of_Nationalism ,
+                                                :Infinite_Jest ,
+                                                :Lift_Your_Skinny_Fists_like_Antennas_to_Heaven ,
+                                                :Metaphysics_or_Ontology ,
+                                                :NOTHING_WILL_REMAIN_OTHER_than_the_THORN_LODGED_in_the_THROAT_of_THIS_WORLD ,
+                                                :Oxford_English_Dictionary ,
+                                                :Sag_Mir_Wo_Die_Blumen_Sind ,
+                                                :Specters_of_Marx_The_State_of_the_Debt_the_Work_of_Mourning_and_the_New_International ,
+                                                :The_Aesthetics_of_Decay_Nothingness_Nostalgia_and_the_Absence_of_Reason ,
+                                                :The_Human_Condition ,
+                                                :The_Invention_of_Whiteness_The_Long_History_of_a_Dangerous_Idea ;
+                                     :hasCreator :Borbala_Magdolna_Pal ;
+                                     :publicationDate "2025-05-26"^^xsd:date ;
+                                     <http://purl.org/dc/terms/creator> :Borbala_Magdolna_Pal .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ESRI
+:ESRI rdf:type owl:NamedIndividual ,
+               :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#EarthScience
+:EarthScience rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :NaturalSciences ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Earth-Science"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Earth Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Ecology
+:Ecology rdf:type owl:NamedIndividual ,
+                  :FieldOfStudyConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :Biology ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+         <http://www.w3.org/2004/02/skos/core#related> :Climatology ,
+                                                       :EnvironmentalScience ,
+                                                       :Geography ,
+                                                       :HumanGeography ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Ecology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#EconomicGeography
+:EconomicGeography rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :Geography ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :Economics ,
+                                                                 :EnvironmentalScience ,
+                                                                 :MigrationStudies ,
+                                                                 :UrbanStudies ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Economic-Geography"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Economic Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Economics
+:Economics rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Economics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#EducationalSciences
+:EducationalSciences rdf:type owl:NamedIndividual ,
+                              :FieldOfStudyConcept ;
+                     <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                     <http://www.w3.org/2004/02/skos/core#altLabel> "Educational-Sciences"@en ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Educational Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Edward_Soja
+:Edward_Soja rdf:type owl:NamedIndividual ,
+                      :Person ;
+             :wikidataQID "https://www.wikidata.org/wiki/Q1283228" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Embodiment
+:Embodiment rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Embodiment"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Emergence
+:Emergence rdf:type owl:NamedIndividual ,
+                    :TopicConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :Complexity ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Emergence"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Emilio_Enrique_Suarez_Hode
+:Emilio_Enrique_Suarez_Hode rdf:type owl:NamedIndividual ,
+                                     :Person ;
+                            :memberOf :Everything_equals_a_Sign .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Engineering
+:Engineering rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :AppliedSciences ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Engineering"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#EnvironmentalScience
+:EnvironmentalScience rdf:type owl:NamedIndividual ,
+                               :FieldOfStudyConcept ;
+                      <http://www.w3.org/2004/02/skos/core#broader> :NaturalSciences ;
+                      <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                      <http://www.w3.org/2004/02/skos/core#related> :Climatology ,
+                                                                    :Ecology ,
+                                                                    :Geography ,
+                                                                    :Geology ,
+                                                                    :UrbanStudies ;
+                      <http://www.w3.org/2004/02/skos/core#altLabel> "Environmental-Science"@en ;
+                      <http://www.w3.org/2004/02/skos/core#prefLabel> "Environmental Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Epistemology
+:Epistemology rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :AppliedOntology ,
+                                                            :DataScience ,
+                                                            :Hermeneutics ,
+                                                            :Logic ,
+                                                            :ScienceAndTechnologyStudies ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Epistemology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Esther_Peeren
+:Esther_Peeren rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :wikidataQID "https://www.wikidata.org/entity/Q137998327" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Ethics
+:Ethics rdf:type owl:NamedIndividual ,
+                 :FieldOfStudyConcept ,
+                 :TopicConcept ;
+        <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+        <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                       :TopicScheme ;
+        <http://www.w3.org/2004/02/skos/core#prefLabel> "Ethics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Everything_equals_a_Sign
+:Everything_equals_a_Sign rdf:type owl:NamedIndividual ,
+                                   :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Exhaustion
+:Exhaustion rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Exhaustion"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Feedback
+:Feedback rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Feedback"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Felix_Guattari
+:Felix_Guattari rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q352465" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#FemaleFear
+:FemaleFear rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :Feminism ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Female-Fear"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Female Fear"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Feminism
+:Feminism rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#related> :Politics ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Feminism"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#FieldOfStudyScheme
+:FieldOfStudyScheme rdf:type owl:NamedIndividual ,
+                             <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#FilmStudies
+:FilmStudies rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :MediaStudies ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :Aesthetics ,
+                                                           :CulturalStudies ,
+                                                           :PerformanceStudies ,
+                                                           :SoundStudies ,
+                                                           :VisualArts ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Film-Studies"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Film Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Florine_Ballif
+:Florine_Ballif rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :ORCID "https://orcid.org/0000-0002-1853-3601" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#FormalSciences
+:FormalSciences rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#topConceptOf> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Formal-Sciences"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Formal Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Frames_of_War_When_Is_Life_Grievable
+:Frames_of_War_When_Is_Life_Grievable rdf:type owl:NamedIndividual ,
+                                               :TextualWork ,
+                                               :Work ;
+                                      :hasCreator :Judith_Butler ;
+                                      :ISBN_13 "9781784782481" ;
+                                      :publicationDate "2009"^^xsd:gYear ;
+                                      :synopsis "\"Frames of War begins where Butler's Precarious Lives left off: on the idea that we cannot grieve for those lost lives that we never saw as lives to begin with. In this age of CNN-mediated war, the lives of those wretched populations of the earth -- the refugees; the victims of unjust imprisonment and torture; the immigrants virtually enslaved by their starvation and legal disenfranchisement -- are always presented to us as already irretrievable and thereby already lost. We may shake our heads at their wretchedness but then we sacrifice them nonetheless, for they are already forgone. By analyzing the different frames through which we experience war, Butler calls for a reorientation of the Left toward the precarity of those lives. Only by recognizing those lives as precarious lives -- lives that are not yet lost but are ever fragile and in need of protection -- might the Left stand in unity against the violence perpetrated through arbitrary state power." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GenderStudies
+:GenderStudies rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :CriticalTheory ,
+                                                             :CulturalStudies ,
+                                                             :Psychology ,
+                                                             :Sociology ,
+                                                             :SpatialJusticeStudies ,
+                                                             :UrbanStudies ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Gender-Studies"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Gender Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GeoZome_Mapping_the_Geopolitical_Rhizome
+:GeoZome_Mapping_the_Geopolitical_Rhizome rdf:type owl:NamedIndividual ,
+                                                   :TextualWork ,
+                                                   :Work ;
+                                          :citesWork :A_Thousand_Plateaus_Capitalism_and_Schizophrenia ,
+                                                     :Basic_Formal_Ontology_Tutorial ,
+                                                     :Building_Ontologies_with_Basic_Formal_Ontology ,
+                                                     :Graphesis_Visual_Forms_of_Knowledge_Production ,
+                                                     :Mapping_and_Sequencing_the_Human_Genome ,
+                                                     :On_Exactitude_in_Science ,
+                                                     :Ontology_and_World_Politics ,
+                                                     :Semiology_of_Graphics_Diagrams_Networks_Maps ;
+                                          :hasCreator :Emilio_Enrique_Suarez_Hode ;
+                                          :publicationDate "2025-05-26"^^xsd:date ;
+                                          <http://purl.org/dc/terms/creator> :Emilio_Enrique_Suarez_Hode .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GeographicInformationScience
+:GeographicInformationScience rdf:type owl:NamedIndividual ,
+                                       :FieldOfStudyConcept ;
+                              <http://www.w3.org/2004/02/skos/core#broader> :InformationScience ;
+                              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                              <http://www.w3.org/2004/02/skos/core#related> :Cartography ,
+                                                                            :DataScience ,
+                                                                            :Geography ,
+                                                                            :InformationDesign ,
+                                                                            :SocialGeography ;
+                              <http://www.w3.org/2004/02/skos/core#altLabel> "Geographic-Information-Science"@en ;
+                              <http://www.w3.org/2004/02/skos/core#prefLabel> "Geographic Information Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Geography
+:Geography rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#related> :EnvironmentalScience ,
+                                                         :GeographicInformationScience ,
+                                                         :Geopolitics ,
+                                                         :HumanGeography ,
+                                                         :SocialGeography ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Geology
+:Geology rdf:type owl:NamedIndividual ,
+                  :FieldOfStudyConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :EarthScience ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+         <http://www.w3.org/2004/02/skos/core#related> :Climatology ,
+                                                       :EnvironmentalScience ,
+                                                       :Geography ,
+                                                       :Geophysics ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Geology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Geophysics
+:Geophysics rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :EarthScience ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :Climatology ,
+                                                          :EnvironmentalScience ,
+                                                          :Geology ,
+                                                          :Physics ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Geophysics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GeopoliticalEvents
+:GeopoliticalEvents rdf:type owl:NamedIndividual ,
+                             :TopicConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :Geopolitics ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :NationStates ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Geopolitical-Events"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Geopolitical Events"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Geopolitics
+:Geopolitics rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ,
+                                                            :Politics ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                            :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :BorderStudies ,
+                                                           :InternationalRelations ,
+                                                           :NationStates ,
+                                                           :PoliticalGeography ,
+                                                           :SecurityStudies ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Geopolitics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GeospatialDataVisualization
+:GeospatialDataVisualization rdf:type owl:NamedIndividual ,
+                                      :MethodConcept ;
+                             <http://www.w3.org/2004/02/skos/core#broader> :DataVisualization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Gerlinde_Schuller
+:Gerlinde_Schuller rdf:type owl:NamedIndividual ,
+                            :Person ;
+                   :wikidataQID "https://www.wikidata.org/entity/Q133720924" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Ghosts_Spectres_Revenants_Hauntology_as_a_Means_to_Think_and_Feel_Future
+:Ghosts_Spectres_Revenants_Hauntology_as_a_Means_to_Think_and_Feel_Future rdf:type owl:NamedIndividual ,
+                                                                                   :MultimediaWork ,
+                                                                                   :Work ;
+                                                                          :containsWork :Hauntings_from_the_Future_Ghosts_Time_Travellers_Extraterrestrials ;
+                                                                          :hasCreator :Katharina_Fink ,
+                                                                                      :Marie_Anne_Kohl ;
+                                                                          :publicationDate "2008"^^xsd:gYear ;
+                                                                          :synopsis "Hauntology as a successful academic concept holds a pun on the idea of 'ontology.' It denotes a temporal nonlinearity, the persistence and lingering of failed, of omitted, often utopian, ideas that also formed radical visions of futures and opens a field to discuss presence and absence, visibility and invisibility. The present we live is embedded in the presence of ghosts and spectres, and the traces of imaginations of different times and spaces may become visible and doable. The scholars and artists contributing to this volume discuss these conceptual outlines in a series of transdisciplinary contributions. Art in its various forms is the integral part of these hauntological engagements." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Gilles_Deleuze
+:Gilles_Deleuze rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q184226" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Godspeed_You_Black_Emperor
+:Godspeed_You_Black_Emperor rdf:type owl:NamedIndividual ,
+                                     :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Graphesis_Visual_Forms_of_Knowledge_Production
+:Graphesis_Visual_Forms_of_Knowledge_Production rdf:type owl:NamedIndividual ,
+                                                         :Work ;
+                                                :hasCreator :Johanna_Dricker ;
+                                                :ISBN_13 "9780674724938" ;
+                                                :publicationDate "2014"^^xsd:gYear ;
+                                                :synopsis """In our current screen-saturated culture, we take in more information through visual means than at any point in history. The computers and smart phones that constantly flood us with images do more than simply convey information. They structure our relationship to information through graphical formats. Learning to interpret how visual forms not only present but produce knowledge, says Johanna Drucker, has become an essential contemporary skill .
+
+Graphesis provides a descriptive critical language for the analysis of graphical knowledge. In an interdisciplinary study fusing digital humanities with media studies and graphic design history, Drucker outlines the principles by which visual formats organize meaningful content. Among the most significant of these formats is the graphical user interface (GUI)--the dominant feature of the screens of nearly all consumer electronic devices. Because so much of our personal and professional lives is mediated through visual interfaces, it is important to start thinking critically about how they shape knowledge, our behavior, and even our identity .
+
+Information graphics bear tell-tale signs of the disciplines in which they originated: statistics, business, and the empirical sciences. Drucker makes the case for studying visuality from a humanistic perspective, exploring how graphic languages can serve fields where qualitative judgments take priority over quantitative statements of fact. Graphesis offers a new epistemology of the ways we process information, embracing the full potential of visual forms and formats of knowledge production.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#GraphicDesign
+:GraphicDesign rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :InformationDesign ,
+                                                             :MediaStudies ,
+                                                             :Semiotics ,
+                                                             :VisualArts ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Graphic-Design"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Graphic Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Graphs-Chart
+:Graphs-Chart rdf:type owl:NamedIndividual ,
+                       :TopicConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :DataVisualization ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Graphs Chart"@en ,
+                                                             "Graphs-Chart"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Graphs (Chart)"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Graphs-Web
+:Graphs-Web rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Graphs Web"@en ,
+                                                           "Graphs-Web"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Graphs (Web)"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Guy_Debord
+:Guy_Debord rdf:type owl:NamedIndividual ,
+                     :Person ;
+            :wikidataQID "https://www.wikidata.org/entity/Q298075" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Haig_Aivazian
+:Haig_Aivazian rdf:type owl:NamedIndividual ,
+                        :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Hannah_Arendt
+:Hannah_Arendt rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :wikidataQID "https://www.wikidata.org/entity/Q60025" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Hannah_Arendt_Stanford_Encyclopedia_of_Philosophy
+:Hannah_Arendt_Stanford_Encyclopedia_of_Philosophy rdf:type owl:NamedIndividual ,
+                                                            :TextualWork ,
+                                                            :Work ;
+                                                   :hasCreator :Maurizio_Passerin_d_Entreves ;
+                                                   :publicationDate "2025-03-10"^^xsd:date .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Hauntings_from_the_Future_Ghosts_Time_Travellers_Extraterrestrials
+:Hauntings_from_the_Future_Ghosts_Time_Travellers_Extraterrestrials rdf:type owl:NamedIndividual ,
+                                                                             :TextualWork ,
+                                                                             :Work ;
+                                                                    :containedWithinWork :Ghosts_Spectres_Revenants_Hauntology_as_a_Means_to_Think_and_Feel_Future ;
+                                                                    :hasCreator :Esther_Peeren ;
+                                                                    :introduction "\"The usefulness of the figure of the ghost as \"a figure of return\" and \"present absence\" that offers \"a critique of the 'un-rnixed'P\" for conceptualising how forgotten, overlooked, repressed or denied histories of violence and oppression linger, only partially materialised, in the present, and how such histories, once their remaining traces have been acknowledged, should be addressed has been established in a myriad of contexts? The same goes for the ghost's ability to shed light on unseen, disavowed or obfuscated aspects of the present, from the workings of global capitalism\" to what I have elsewhere called, following Achille Mbembe's work on necropolitics, \"living ghosts\" - people like undocumented migrants \"who, already in their lifetime, resemble dispossessed ghosts in that they are ignored and considered expendable, or, sometimes at the same time, become objects of intense fear and violent attempts at extermination.\" What has only recently begun to draw attention, and what I will focus on here, is what the ghost, in its peculiar temporality and materiality, and its potential haunting force has to say about our relation to the future, particularly when, as the editors of Futures and Fictions insist, in the face of \"the spectre of all kinds of futures likely being curtailed\" it is becoming more and more urgent to think of the future beyond the linear and the singulary/unitary.\"" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Hauntology
+:Hauntology rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Hauntology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Henri_Lefebvre
+:Henri_Lefebvre rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q162597" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Heritage
+:Heritage rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Heritage"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Hermeneutics
+:Hermeneutics rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :Epistemology ,
+                                                            :Literature ,
+                                                            :Phenomenology ,
+                                                            :ReligiousStudies ,
+                                                            :TranslationStudies ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Hermeneutics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#History
+:History rdf:type owl:NamedIndividual ,
+                  :FieldOfStudyConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "History"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#HumanGeography
+:HumanGeography rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#broader> :Geography ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :Anthropology ,
+                                                              :Ecology ,
+                                                              :Sociology ,
+                                                              :UrbanStudies ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Human-Geography"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Human Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Humanities
+:Humanities rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#topConceptOf> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Humanities"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Imagined_Communities_Reflections_on_the_Origin_and_Spread_of_Nationalism
+:Imagined_Communities_Reflections_on_the_Origin_and_Spread_of_Nationalism rdf:type owl:NamedIndividual ,
+                                                                                   :TextualWork ,
+                                                                                   :Work ;
+                                                                          :hasCreator :Benedict_Anderson ;
+                                                                          :ISBN_10 "0860910598" ;
+                                                                          :synopsis """What makes people love and die for nations, as well as hate and kill in their name? While many studies have been written on nationalist political movements, the sense of nationality—the personal and cultural feeling of belonging to the nation—has not received proportionate attention. In this widely acclaimed work, Benedict Anderson examines the creation and global spread of the 'imagined communities' of nationality .
+
+Anderson explores the processes that created these communities: the territorialisation of religious faiths, the decline of antique kingship, the interaction between capitalism and print, the development of vernacular languages-of-state, and changing conceptions of time. He shows how an originary nationalism born in the Americas was modularly adopted by popular movements in Europe, by the imperialist powers, and by the anti-imperialist resistances in Asia and Africa .
+
+This revised edition includes two new chapters, one of which discusses the complex role of the colonialist state's mindset in the development of Third World nationalism, while the other analyses the processes by which all over the world, nations came to imagine themselves as old.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#IndustrialDesign
+:IndustrialDesign rdf:type owl:NamedIndividual ,
+                           :FieldOfStudyConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "Industrial-Design"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "Industrial Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Industrial_Ontologies_Foundry
+:Industrial_Ontologies_Foundry rdf:type owl:NamedIndividual ,
+                                        :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Infinite_Jest
+:Infinite_Jest rdf:type owl:NamedIndividual ,
+                        :TextualWork ,
+                        :Work ;
+               :hasCreator :David_Foster_Wallace ;
+               :ISBN_13 "9780316920049" ;
+               :synopsis "Tennis prodigy Hal Incandenza and recovering addict Don Gately are consumed by the same obsession: their search for the master copy of Infinite Jest, a movie so entertaining that anyone who watches it loses all desire to do anything else ..." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#InformationDesign
+:InformationDesign rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :Cartography ,
+                                                                 :DataScience ,
+                                                                 :GeographicInformationScience ,
+                                                                 :GraphicDesign ,
+                                                                 :MediaStudies ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Information-Design"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Information Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#InformationScience
+:InformationScience rdf:type owl:NamedIndividual ,
+                             :FieldOfStudyConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :AppliedOntology ,
+                                                                  :DataScience ,
+                                                                  :DigitalHumanities ,
+                                                                  :KnowledgeRepresentation ,
+                                                                  :NetworkScience ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Information-Science"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Information Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Infrastructure
+:Infrastructure rdf:type owl:NamedIndividual ,
+                         :TopicConcept ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :UrbanSpaces ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Infrastructure"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#IntellectualHistory
+:IntellectualHistory rdf:type owl:NamedIndividual ,
+                              :FieldOfStudyConcept ;
+                     <http://www.w3.org/2004/02/skos/core#broader> :History ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                     <http://www.w3.org/2004/02/skos/core#related> :ArtHistory ,
+                                                                   :CulturalStudies ,
+                                                                   :Philosophy ,
+                                                                   :PoliticalTheory ,
+                                                                   :ReligiousStudies ;
+                     <http://www.w3.org/2004/02/skos/core#altLabel> "Intellectual-History"@en ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Intellectual History"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#InteractionDesign
+:InteractionDesign rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :GraphicDesign ,
+                                                                 :InformationDesign ,
+                                                                 :MediaStudies ,
+                                                                 :Psychology ,
+                                                                 :ServiceDesign ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Interaction-Design"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Interaction Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#InternationalLaw
+:InternationalLaw rdf:type owl:NamedIndividual ,
+                           :FieldOfStudyConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :LegalStudies ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                  <http://www.w3.org/2004/02/skos/core#related> :BorderStudies ,
+                                                                :PeaceAndConflictStudies ,
+                                                                :SecurityStudies ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "International-Law"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "International Law"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#InternationalRelations
+:InternationalRelations rdf:type owl:NamedIndividual ,
+                                 :FieldOfStudyConcept ;
+                        <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ;
+                        <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                        <http://www.w3.org/2004/02/skos/core#related> :Geopolitics ,
+                                                                      :InternationalLaw ,
+                                                                      :MigrationStudies ,
+                                                                      :PoliticalGeography ,
+                                                                      :PublicPolicy ,
+                                                                      :SecurityStudies ;
+                        <http://www.w3.org/2004/02/skos/core#altLabel> "International-Relations"@en ;
+                        <http://www.w3.org/2004/02/skos/core#prefLabel> "International Relations"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Intertextuality
+:Intertextuality rdf:type owl:NamedIndividual ,
+                          :TopicConcept ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Intertextuality"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Jacques_Bertin
+:Jacques_Bertin rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q711887" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Jacques_Derrida
+:Jacques_Derrida rdf:type owl:NamedIndividual ,
+                          :Person ;
+                 :wikidataQID "https://www.wikidata.org/entity/Q130631" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Johanna_Dricker
+:Johanna_Dricker rdf:type owl:NamedIndividual ,
+                          :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Jorge_Luis_Borges
+:Jorge_Luis_Borges rdf:type owl:NamedIndividual ,
+                            :Person ;
+                   :wikidataQID "https://www.wikidata.org/entity/Q909" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Joseph_Kosuth
+:Joseph_Kosuth rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :wikidataQID "https://www.wikidata.org/entity/Q313113" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Judith_Butler
+:Judith_Butler rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :wikidataQID "https://www.wikidata.org/entity/Q219368" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Katharina_Fink
+:Katharina_Fink rdf:type owl:NamedIndividual ,
+                         :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Kim_England
+:Kim_England rdf:type owl:NamedIndividual ,
+                      :Person ;
+             :wikidataQID "https://www.wikidata.org/entity/Q112862318" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#KnowledgeGraph
+:KnowledgeGraph rdf:type owl:NamedIndividual ,
+                         :TopicConcept ;
+                <http://www.w3.org/2004/02/skos/core#broader> :Graphs-Web ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :SemanticWeb ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Knowledge-Graph"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Knowledge Graph"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#KnowledgeOrganization
+:KnowledgeOrganization rdf:type owl:NamedIndividual ,
+                                :TopicConcept ;
+                       <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                       <http://www.w3.org/2004/02/skos/core#related> :Archive ,
+                                                                     :ConventionalStandards ,
+                                                                     :LinkedData ,
+                                                                     :Metadata ,
+                                                                     :Ontology ;
+                       <http://www.w3.org/2004/02/skos/core#altLabel> "Knowledge-Organization"@en ;
+                       <http://www.w3.org/2004/02/skos/core#prefLabel> "Knowledge Organization"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#KnowledgeRepresentation
+:KnowledgeRepresentation rdf:type owl:NamedIndividual ,
+                                  :FieldOfStudyConcept ;
+                         <http://www.w3.org/2004/02/skos/core#broader> :AppliedOntology ;
+                         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                         <http://www.w3.org/2004/02/skos/core#related> :ComputerScience ,
+                                                                       :DataScience ,
+                                                                       :InformationScience ,
+                                                                       :Logic ;
+                         <http://www.w3.org/2004/02/skos/core#altLabel> "Knowledge-Representation"@en ;
+                         <http://www.w3.org/2004/02/skos/core#prefLabel> "Knowledge Representation"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#LandscapeArchitecture
+:LandscapeArchitecture rdf:type owl:NamedIndividual ,
+                                :FieldOfStudyConcept ;
+                       <http://www.w3.org/2004/02/skos/core#broader> :Architecture ;
+                       <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                       <http://www.w3.org/2004/02/skos/core#related> :EnvironmentalScience ,
+                                                                     :Geography ,
+                                                                     :UrbanPlanning ,
+                                                                     :VisualArts ;
+                       <http://www.w3.org/2004/02/skos/core#altLabel> "Landscape-Architecture"@en ;
+                       <http://www.w3.org/2004/02/skos/core#prefLabel> "Landscape Architecture"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#LanguageStudies
+:LanguageStudies rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Language Studies"@en ,
+                                                                "Language and Literature"@en ,
+                                                                "Language-&-Literature"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Language & Literature"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Laude_Emanuel
+:Laude_Emanuel rdf:type owl:NamedIndividual ,
+                        :Person ;
+               :memberOf :Everything_equals_a_Sign .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Lauren_Elkin
+:Lauren_Elkin rdf:type owl:NamedIndividual ,
+                       :Person ;
+              :wikidataQID "https://www.wikidata.org/entity/Q99522711" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Le_defi_des_teichopolitiques_Analyser_la_fermeture_contemporaine_des_territoires
+:Le_defi_des_teichopolitiques_Analyser_la_fermeture_contemporaine_des_territoires rdf:type owl:NamedIndividual ,
+                                                                                           :TextualWork ,
+                                                                                           :Work ;
+                                                                                  :hasCreator :Florine_Ballif ,
+                                                                                              :Stephane_Rosiere ;
+                                                                                  :DOI "10.3917/eg.383.0193" ;
+                                                                                  :Language "en"^^xsd:language ;
+                                                                                  :abstract "Common sense would suggest that globalisation signifies the end of walls. Infact, new systems of fenced boundaries are being built all over the world, and walls are even proliferating within cities. This paperseeks to analyse “teichopolitics” – a new word derived from Ancient Greek teichos meaning “city wall” – i.e. the politics of building walls. Security issues seem to bean obvious factor, but economic aspects are also important. Building walls is a source of profit for the security and construction industries. Developers and large companies, as well as governments and individuals, therefore have their own strategies that are contributing to the proliferation of barriers." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#LegalStudies
+:LegalStudies rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Legal-Studies"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Legal Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Leslie_Kern
+:Leslie_Kern rdf:type owl:NamedIndividual ,
+                      :Person ;
+             :wikidataQID "https://www.wikidata.org/entity/Q112549618" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Lift_Your_Skinny_Fists_like_Antennas_to_Heaven
+:Lift_Your_Skinny_Fists_like_Antennas_to_Heaven rdf:type owl:NamedIndividual ,
+                                                         :SonicWork ,
+                                                         :Work ;
+                                                :hasCreator :Godspeed_You_Black_Emperor ;
+                                                :releaseYear "2000"^^xsd:gYear .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Lili_Orszag
+:Lili_Orszag rdf:type owl:NamedIndividual ,
+                      :Person ;
+             :wikidataQID "https://www.wikidata.org/entity/Q1226041" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#LinesOfFlight
+:LinesOfFlight rdf:type owl:NamedIndividual ,
+                        :TopicConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :Rhizome ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Lines-Of-Flight"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Lines Of Flight"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Linguistics
+:Linguistics rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ,
+                                                            :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Linguistics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#LinkedData
+:LinkedData rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :KnowledgeGraph ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Linked-Data"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Linked Data"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Literature
+:Literature rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Literature"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Logic
+:Logic rdf:type owl:NamedIndividual ,
+                :FieldOfStudyConcept ;
+       <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+       <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+       <http://www.w3.org/2004/02/skos/core#prefLabel> "Logic"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Luna_Joubert
+:Luna_Joubert rdf:type owl:NamedIndividual ,
+                       :Person ;
+              :memberOf :Everything_equals_a_Sign .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MachineLearning
+:MachineLearning rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :DataScience ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :ComputationalSocialScience ,
+                                                               :ComputerScience ,
+                                                               :InformationScience ,
+                                                               :Neuroscience ,
+                                                               :Statistics ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Machine-Learning"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Machine Learning"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Mapping_and_Sequencing_the_Human_Genome
+:Mapping_and_Sequencing_the_Human_Genome rdf:type owl:NamedIndividual ,
+                                                  :TextualWork ,
+                                                  :Work ;
+                                         :hasCreator :Committee_on_Mapping_and_Sequencing_the_Human_Genome ;
+                                         :ISBN_13 "9780309038409" ;
+                                         :publicationDate "1988"^^xsd:gYear ;
+                                         :synopsis """There is growing enthusiasm in the scientific community about the prospect of mapping and sequencing the human genome, a monumental project that will have far-reaching consequences for medicine, biology, technology, and other fields. But how will such an effort be organized and funded? How will we develop the new technologies that are needed? What new legal, social, and ethical questions will be raised?
+
+Mapping and Sequencing the Human Genome is a blueprint for this proposed project. The authors offer a highly readable explanation of the technical aspects of genetic mapping and sequencing, and they recommend specific interim and long-range research goals, organizational strategies, and funding levels. They also outline some of the legal and social questions that might arise and urge their early consideration by policymakers.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Maps
+:Maps rdf:type owl:NamedIndividual ,
+               :TopicConcept ;
+      <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+      <http://www.w3.org/2004/02/skos/core#related> :Borders ,
+                                                    :Cartography ,
+                                                    :Territory ,
+                                                    :VisualCommunication ;
+      <http://www.w3.org/2004/02/skos/core#prefLabel> "Maps"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Marie_Anne_Kohl
+:Marie_Anne_Kohl rdf:type owl:NamedIndividual ,
+                          :Person ;
+                 :wikidataQID "https://www.wikidata.org/entity/Q130793589" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Martin_Grandjean
+:Martin_Grandjean rdf:type owl:NamedIndividual ,
+                           :Person ;
+                  :ORCID "https://orcid.org/0000-0003-3184-3943" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MaterialScheme
+:MaterialScheme rdf:type owl:NamedIndividual ,
+                         <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Mathematics
+:Mathematics rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Math"@en ,
+                                                            "Maths"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Mathematics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Mattias_Karrholm
+:Mattias_Karrholm rdf:type owl:NamedIndividual ,
+                           :Person .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Maurice_Merleau_Ponty
+:Maurice_Merleau_Ponty rdf:type owl:NamedIndividual ,
+                                :Person ;
+                       :wikidataQID "https://www.wikidata.org/entity/Q212639" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Maurizio_Passerin_d_Entreves
+:Maurizio_Passerin_d_Entreves rdf:type owl:NamedIndividual ,
+                                       :Person ;
+                              :wikidataQID "https://www.wikidata.org/entity/Q93236478" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MediaStudies
+:MediaStudies rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :CommunicationStudies ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :CulturalStudies ,
+                                                            :DigitalHumanities ,
+                                                            :GraphicDesign ,
+                                                            :InformationDesign ,
+                                                            :Semiotics ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Media-Studies"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Media Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Metadata
+:Metadata rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Metadata"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Metaphysics
+:Metaphysics rdf:type owl:NamedIndividual ,
+                      :FieldOfStudyConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Metaphysics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Metaphysics_or_Ontology
+:Metaphysics_or_Ontology rdf:type owl:NamedIndividual ,
+                                  :TextualWork ,
+                                  :Work ;
+                         :hasCreator :Piotr_Jaroszynski ;
+                         :ISBN_13 "9789004358256" ;
+                         :publicationDate "2008"^^xsd:gYear ;
+                         :synopsis "Metaphysics or Ontology? treats the evolution of the object of metaphysics from being, to the concept of being, to, finally, the object (thought). Possible being must be non-contradictory, but an object of thought includes anything a human being can think, including contradictions and nothingness. When the concept of being, or object of thought, replaces existence as the object of metaphysics, it becomes something other than metaphysics—ontology, or something beyond ontology. However, ontology cannot examine existence because it only investigates concepts and possibility. Only classical metaphysics investigates reality qua reality. This book masterfully treats the history of this controversy and many other important metaphysical questions raised over the centuries" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MethodScheme
+:MethodScheme rdf:type owl:NamedIndividual ,
+                       <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Michael_Billig
+:Michael_Billig rdf:type owl:NamedIndividual ,
+                         :Person ;
+                :wikidataQID "https://www.wikidata.org/entity/Q9032242" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Migration
+:Migration rdf:type owl:NamedIndividual ,
+                    :TopicConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :Mobility ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Migration"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#MigrationStudies
+:MigrationStudies rdf:type owl:NamedIndividual ,
+                           :FieldOfStudyConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                  <http://www.w3.org/2004/02/skos/core#related> :Anthropology ,
+                                                                :BorderStudies ,
+                                                                :HumanGeography ,
+                                                                :InternationalRelations ,
+                                                                :Sociology ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "Migration-Studies"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "Migration Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Mobility
+:Mobility rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Mobility"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#NOTHING_WILL_REMAIN_OTHER_than_the_THORN_LODGED_in_the_THROAT_of_THIS_WORLD
+:NOTHING_WILL_REMAIN_OTHER_than_the_THORN_LODGED_in_the_THROAT_of_THIS_WORLD rdf:type owl:NamedIndividual ,
+                                                                                      :PerformativeWork ,
+                                                                                      :Work ;
+                                                                             :hasCreator :Haig_Aivazian ,
+                                                                                         :Noor_Abed ;
+                                                                             :releaseYear "2025"^^xsd:gYear ;
+                                                                             :description """Nothing Will Remain Other than the Thorn Lodged in the Throat of this World is a charged performance by Haig Aivazian and Noor Abed, composed from sound, text, and movement. Across an arc of guttural sounds, gasps, coughs, hums, and hisses, the artists work through the anatomy of voice – noses, mouths, larynxes, tracheae, and lungs – letting each organ introduce its own emotional and textual register .
+
+Developed through an extended exchange that began in 2024 – and continues to this day – the performance draws on months of shared reflections, quotidian anecdotes, readings, poems, recordings of songs and recitations. The performance makes these gatherings public, as an homage to the active labour of selecting, remembering, re-enacting, restructuring, reassessing, and reassembling of the elements from the correspondence. It grapples with a moment in which the constant hum of genocidal violence feels inescapably present, shaping both artists’ trajectories. The result is a charged, intimate sonic encounter where breath becomes testimony and the body becomes a site of memory, resistance, and resonance .
+
+This programme is part of the Biennial Exhibition at Arti et Amicitiae, where Noor Abed’s film installation A Night We Held Between is on view. Please note that the performance itself takes place at If I Can’t Dance, and tickets grant entry only to this event, not to the exhibition.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#NationStates
+:NationStates rdf:type owl:NamedIndividual ,
+                       :TopicConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :Politics ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Nation-States"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Nation States"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#NationalIdentity
+:NationalIdentity rdf:type owl:NamedIndividual ,
+                           :TopicConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :NationStates ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "National-Identity"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "National Identity"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#National_Human_Genome_Research_Institute
+:National_Human_Genome_Research_Institute rdf:type owl:NamedIndividual ,
+                                                   :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Nationalism
+:Nationalism rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#broader> :NationStates ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :NationalIdentity ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Nationalism"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#NaturalSciences
+:NaturalSciences rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#topConceptOf> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Natural-Sciences"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Natural Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#NetworkScience
+:NetworkScience rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :ComplexityScience ,
+                                                              :ComputationalSocialScience ,
+                                                              :Sociology ,
+                                                              :Statistics ,
+                                                              :SystemsScience ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Network-Science"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Network Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Networks
+:Networks rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#related> :Graphs-Web ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Networks"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Neuroscience
+:Neuroscience rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :Biology ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :Cybernetics ,
+                                                            :DataScience ,
+                                                            :MachineLearning ,
+                                                            :Psychology ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Neuroscience"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#New_Studies_in_Aesthetics
+:New_Studies_in_Aesthetics rdf:type owl:NamedIndividual ,
+                                    :TextualWork ,
+                                    :Work ;
+                           :containsWork :The_Aesthetics_of_Decay_Nothingness_Nostalgia_and_the_Absence_of_Reason ;
+                           :hasCreator :Peter_Lang ;
+                           :publicationDate "2006"^^xsd:gYear ;
+                           :description """This series publishes explorative thinking in the philosophy of art as well as in the philosophy of life. Applied aesthetics and theoretical development of non-traditional topics are considered, along with traditional studies in aesthetic theory or the problems in specific arts. Well-written volumes may take the form of monographs, treatises, collected essays, proceedings, reference works, and translations. Use of illustrations is encouraged. In addition to works in English, texts in German, French, Spanish, Italian, and other languages may be published .
+
+This series publishes explorative thinking in the philosophy of art as well as in the philosophy of life. Applied aesthetics and theoretical development of non-traditional topics are considered, along with traditional studies in aesthetic theory or the problems in specific arts. Well-written volumes may take the form of monographs, treatises, collected essays, proceedings, reference works, and translations. Use of illustrations is encouraged. In addition to works in English, texts in German, French, Spanish, Italian, and other languages may be published .
+
+This series publishes explorative thinking in the philosophy of art as well as in the philosophy of life. Applied aesthetics and theoretical development of non-traditional topics are considered, along with traditional studies in aesthetic theory or the problems in specific arts. Well-written volumes may take the form of monographs, treatises, collected essays, proceedings, reference works, and translations. Use of illustrations is encouraged. In addition to works in English, texts in German, French, Spanish, Italian, and other languages may be published.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Noise
+:Noise rdf:type owl:NamedIndividual ,
+                :TopicConcept ;
+       <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+       <http://www.w3.org/2004/02/skos/core#prefLabel> "Noise"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Noor_Abed
+:Noor_Abed rdf:type owl:NamedIndividual ,
+                    :Person ;
+           :wikidataQID "https://www.wikidata.org/entity/Q124335660" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#On_Exactitude_in_Science
+:On_Exactitude_in_Science rdf:type owl:NamedIndividual ,
+                                   :Work ;
+                          :containedWithinWork :The_Aleph_and_Other_Stories ;
+                          :rawText """…In that Empire, the Art of Cartography attained such Perfection that the map of a
+single Province occupied the entirety of a City, and the map of the Empire, the entirety of a Province. In time, those Unconscionable Maps no longer satisfied, and the  Cartographers Guilds struck a Map of the Empire whose size was that of the Empire, and which coincided point for point with it. The following Generations, who were not so fond of the Study of Cartography as their Forebears had been, saw that that vast Map was Useless, and not without some Pitilessness was it, that they delivered it up to the inclemencies of Sun and Winters. In the Deserts of the West, still today, there are Tattered Ruins of that Map, inhabited by Animals and Beggars; in all the Land there is no other Relic of the Disciplines of Geography.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#One_and_Three_Chairs
+:One_and_Three_Chairs rdf:type owl:NamedIndividual ,
+                               :PhysicalWork ,
+                               :Work ;
+                      :hasCreator :Joseph_Kosuth ;
+                      :ObjectNumber "393.1970.a-c" ;
+                      :publicationDate "1965"^^xsd:gYear ;
+                      :description """In One and Three Chairs, Joseph Kosuth represents one chair three ways: as a manufactured chair, as a photograph, and as a copy of a dictionary entry for the word “chair.” The installation is thus composed of an object, an image, and words .
+
+Kosuth didn’t make the chair, take the photograph, or write the definition; he selected and assembled them together. But is this art? And which representation of the chair is most “accurate”? These open-ended questions are exactly what Kosuth wanted us to think about when he said that “art is making meaning.” By assembling these three alternative representations, Kosuth turns a simple wooden chair into an object of debate and even consternation, a platform for exploring new meanings.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Ontology
+:Ontology rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#related> :LinkedData ,
+                                                        :OntologyEngineering ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Ontology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#OntologyEngineering
+:OntologyEngineering rdf:type owl:NamedIndividual ,
+                              :TopicConcept ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                     <http://www.w3.org/2004/02/skos/core#altLabel> "Ontology-Engineering"@en ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Ontology Engineering"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Ontology_and_World_Politics
+:Ontology_and_World_Politics rdf:type owl:NamedIndividual ,
+                                      :TextualWork ,
+                                      :Work ;
+                             :hasCreator :Sergei_Prozorov ;
+                             :ISBN_13 "9781135011291" ;
+                             :synopsis """Together these two companion volumes develop an innovative theory of world politics, grounded in the reinterpretation of the concepts of ‘world’ and ‘politics’ from an ontological perspective .
+
+Ontology and World Politics presents a new approach to political universalism, grounded in the reinterpretation of world politics from an ontological perspective. In the discipline of International Relations the concept of world politics remains ambivalent, functioning both as a synonym of international relations and their antonym, denoting the aspirations for the overcoming of interstate pluralism in favour of a universalist politics of the global community or the world state. Rather than distinguish ‘world politics’ from ‘international politics’ by its site, level or issues, Prozorov interprets it as another kind of politics. Drawing on Martin Heidegger’s account of world disclosure and Alain Badiou’s phenomenology of worlds, this book posits world politics as a practice of the affirmation of universal axioms across an infinite plurality of limited and particular situations or ‘worlds’. Prozorov reinterprets the familiar principles of community, equality and freedom in ontological terms as attributes of pure being, subtracted from all positive determinations, and presents them as axioms of universalist politics valid in any world whatsoever. This approach to world politics serves as the groundwork for a comprehensive reconsideration of the central themes of political and international relations theory .
+
+Systematic and accessible, these works will be key reading for all students and scholars of political science and international relations.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Oxford_English_Dictionary
+:Oxford_English_Dictionary rdf:type owl:NamedIndividual ,
+                                    :TextualWork ,
+                                    :Work ;
+                           :hasCreator :Oxford_University_Press ;
+                           :DOI "10.1093/OED/1200948009" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Oxford_University_Press
+:Oxford_University_Press rdf:type owl:NamedIndividual ,
+                                  :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PeaceAndConflictStudies
+:PeaceAndConflictStudies rdf:type owl:NamedIndividual ,
+                                  :FieldOfStudyConcept ;
+                         <http://www.w3.org/2004/02/skos/core#broader> :InternationalRelations ;
+                         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                         <http://www.w3.org/2004/02/skos/core#related> :Geopolitics ,
+                                                                       :InternationalLaw ,
+                                                                       :MigrationStudies ,
+                                                                       :PoliticalTheory ,
+                                                                       :SecurityStudies ;
+                         <http://www.w3.org/2004/02/skos/core#altLabel> "Peace-and-Conflict-Studies"@en ;
+                         <http://www.w3.org/2004/02/skos/core#prefLabel> "Peace and Conflict Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PerformanceStudies
+:PerformanceStudies rdf:type owl:NamedIndividual ,
+                             :FieldOfStudyConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :Arts ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :Aesthetics ,
+                                                                  :FilmStudies ,
+                                                                  :GenderStudies ,
+                                                                  :SonicArts ,
+                                                                  :VisualArts ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Performance-Studies"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Performance Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Peter_Lang
+:Peter_Lang rdf:type owl:NamedIndividual ,
+                     :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Phenomenology
+:Phenomenology rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :Aesthetics ,
+                                                             :Architecture ,
+                                                             :Hermeneutics ,
+                                                             :Psychology ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Phenomenology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Philology
+:Philology rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#related> :Hermeneutics ,
+                                                         :IntellectualHistory ,
+                                                         :Linguistics ,
+                                                         :Literature ,
+                                                         :TranslationStudies ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Philology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Philosophy
+:Philosophy rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :Humanities ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :Ethics ,
+                                                          :ReligiousStudies ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Philosophy"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Physics
+:Physics rdf:type owl:NamedIndividual ,
+                  :FieldOfStudyConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :NaturalSciences ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Physics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Piotr_Jaroszynski
+:Piotr_Jaroszynski rdf:type owl:NamedIndividual ,
+                            :Person ;
+                   :wikidataQID "https://www.wikidata.org/entity/Q11817574" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalAgent
+:PoliticalAgent rdf:type owl:NamedIndividual ,
+                         :TopicConcept ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                <http://www.w3.org/2004/02/skos/core#related> :Geopolitics ,
+                                                              :Politics ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Agent" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalGeography
+:PoliticalGeography rdf:type owl:NamedIndividual ,
+                             :FieldOfStudyConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :Geography ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :BorderStudies ,
+                                                                  :Geopolitics ,
+                                                                  :InternationalRelations ,
+                                                                  :SecurityStudies ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Political-Geography"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalPropaganda
+:PoliticalPropaganda rdf:type owl:NamedIndividual ,
+                              :TopicConcept ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                     <http://www.w3.org/2004/02/skos/core#related> :Politics ,
+                                                                   :VisualCommunication ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Propaganda"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalSciences
+:PoliticalSciences rdf:type owl:NamedIndividual ,
+                            :FieldOfStudyConcept ;
+                   <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                   <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                   <http://www.w3.org/2004/02/skos/core#related> :History ,
+                                                                 :LegalStudies ,
+                                                                 :Philosophy ,
+                                                                 :Sociology ;
+                   <http://www.w3.org/2004/02/skos/core#altLabel> "Political-Sciences"@en ;
+                   <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalSubject
+:PoliticalSubject rdf:type owl:NamedIndividual ,
+                           :TopicConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :Politics ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "Political-Subject"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Subject"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PoliticalTheory
+:PoliticalTheory rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :CriticalTheory ,
+                                                               :Ethics ,
+                                                               :InternationalRelations ,
+                                                               :Philosophy ,
+                                                               :PublicPolicy ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Political-Theory"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Political Theory"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Politics
+:Politics rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#related> :Feminism ,
+                                                        :Sovereignty ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Politics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Psychology
+:Psychology rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :Humanities ,
+                                                          :SocialSciences ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#related> :Cybernetics ,
+                                                          :GenderStudies ,
+                                                          :InteractionDesign ,
+                                                          :Neuroscience ,
+                                                          :Phenomenology ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Psychology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#PublicPolicy
+:PublicPolicy rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :Economics ,
+                                                            :InternationalRelations ,
+                                                            :LegalStudies ,
+                                                            :SecurityStudies ,
+                                                            :UrbanStudies ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Public-Policy"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Public Policy"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#QGIS
+:QGIS rdf:type owl:NamedIndividual ,
+               :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Religion
+:Religion rdf:type owl:NamedIndividual ,
+                   :TopicConcept ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Religion"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ReligiousStudies
+:ReligiousStudies rdf:type owl:NamedIndividual ,
+                           :FieldOfStudyConcept ;
+                  <http://www.w3.org/2004/02/skos/core#broader> :Philosophy ;
+                  <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                  <http://www.w3.org/2004/02/skos/core#related> :Ethics ;
+                  <http://www.w3.org/2004/02/skos/core#altLabel> "Religious-Studies"@en ;
+                  <http://www.w3.org/2004/02/skos/core#prefLabel> "Religious Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Repetition
+:Repetition rdf:type owl:NamedIndividual ,
+                     :TopicConcept ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Repetition"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Rhetoric
+:Rhetoric rdf:type owl:NamedIndividual ,
+                   :FieldOfStudyConcept ;
+          <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+          <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+          <http://www.w3.org/2004/02/skos/core#related> :CommunicationStudies ,
+                                                        :Linguistics ,
+                                                        :Literature ,
+                                                        :PoliticalTheory ,
+                                                        :Semiotics ;
+          <http://www.w3.org/2004/02/skos/core#prefLabel> "Rhetoric"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Rhizome
+:Rhizome rdf:type owl:NamedIndividual ,
+                  :TopicConcept ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+         <http://www.w3.org/2004/02/skos/core#related> :LinkedData ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Rhizome"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Robert_Arp
+:Robert_Arp rdf:type owl:NamedIndividual ,
+                     :Person ;
+            :wikidataQID "https://www.wikidata.org/entity/Q4069864" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Robert_Baird
+:Robert_Baird rdf:type owl:NamedIndividual ,
+                       :Person ;
+              :ORCID "https://orcid.org/0000-0002-2013-1150" ;
+              :wikidataQID "https://www.wikidata.org/entity/Q47322955" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Rudolf_von_Laban
+:Rudolf_von_Laban rdf:type owl:NamedIndividual ,
+                           :Person ;
+                  :wikidataQID "https://www.wikidata.org/entity/Q213712" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Sag_Mir_Wo_Die_Blumen_Sind
+:Sag_Mir_Wo_Die_Blumen_Sind rdf:type owl:NamedIndividual ,
+                                     :MultimediaWork ,
+                                     :Work ;
+                            :hasCreator :Anselm_Kieffer .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ScienceAndTechnologyStudies
+:ScienceAndTechnologyStudies rdf:type owl:NamedIndividual ,
+                                      :FieldOfStudyConcept ;
+                             <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                             <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                             <http://www.w3.org/2004/02/skos/core#related> :AppliedOntology ,
+                                                                           :CriticalTheory ,
+                                                                           :DataScience ,
+                                                                           :Epistemology ,
+                                                                           :Philosophy ;
+                             <http://www.w3.org/2004/02/skos/core#altLabel> "Science-and-Technology-Studies"@en ;
+                             <http://www.w3.org/2004/02/skos/core#prefLabel> "Science and Technology Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SecurityStudies
+:SecurityStudies rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :PoliticalSciences ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :BorderStudies ,
+                                                               :Geopolitics ,
+                                                               :InternationalLaw ,
+                                                               :InternationalRelations ,
+                                                               :PeaceAndConflictStudies ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Security-Studies"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Security Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SemanticWeb
+:SemanticWeb rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :LinkedData ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Semantic-Web"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Semantic Web"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Semiology_of_Graphics_Diagrams_Networks_Maps
+:Semiology_of_Graphics_Diagrams_Networks_Maps rdf:type owl:NamedIndividual ,
+                                                       :Work ;
+                                              :hasCreator :Jacques_Bertin ;
+                                              :ISBN_13 "9781589482616" ;
+                                              :publicationDate "1967"^^xsd:gYear ;
+                                              :synopsis "Originally published in French in 1967, Semiology of Graphics holds a significant place in the theory of information design. Founded on Jacques Bertin's practical experience as a cartographer, Part One of this work is an unprecedented attempt to synthesize principles of graphic communication with the logic of standard rules applied to writing and topography. Part Two brings Bertin's theory to life, presenting a close study of graphic techniques including shape, orientation, color, texture, volume, and size in an array of more than 1,000 maps and diagrams." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Semiotics
+:Semiotics rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#related> :CommunicationStudies ,
+                                                         :GraphicDesign ,
+                                                         :Linguistics ,
+                                                         :MediaStudies ,
+                                                         :Rhetoric ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Semiotics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Sergei_Prozorov
+:Sergei_Prozorov rdf:type owl:NamedIndividual ,
+                          :Person ;
+                 :ORCID "https://orcid.org/0000-0003-0731-0557" ;
+                 :wikidataQID "https://www.wikidata.org/wiki/Q95341636" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#ServiceDesign
+:ServiceDesign rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :AppliedDesign ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :InformationDesign ,
+                                                             :InteractionDesign ,
+                                                             :Psychology ,
+                                                             :UrbanPlanning ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Service-Design"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Service Design"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Situationist_International
+:Situationist_International rdf:type owl:NamedIndividual ,
+                                     :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SocialGeography
+:SocialGeography rdf:type owl:NamedIndividual ,
+                          :FieldOfStudyConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :CulturalGeography ,
+                                                               :GeographicInformationScience ,
+                                                               :Geography ,
+                                                               :HumanGeography ,
+                                                               :UrbanStudies ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Social-Geography"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Social Geography"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SocialNetworkAnalysis_png
+:SocialNetworkAnalysis_png rdf:type owl:NamedIndividual ,
+                                    :VisualWork ,
+                                    :Work ;
+                           :hasCreator :Martin_Grandjean ;
+                           :URL "https://commons.wikimedia.org/w/index.php?title=File:SocialNetworkAnalysis.png&oldid=1085725928" ;
+                           rdfs:comment "Published in: Grandjean Martin (2015). \"Introduction à la visualisation de données, l'analyse de réseau en histoire\" Geschichte und Informatik, 18/19, 2015, 109-128." ,
+                                        "https://commons.wikimedia.org/wiki/File:SocialNetworkAnalysis.png#file" ;
+                           :description "Social network visualization. Graph containing 800 vertices and 10.000 edges. Color = Betweenness centrality." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SocialSciences
+:SocialSciences rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#topConceptOf> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Social-Sciences"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Social Sciences"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Sociology
+:Sociology rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Sociology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SoftwareEngineering
+:SoftwareEngineering rdf:type owl:NamedIndividual ,
+                              :FieldOfStudyConcept ;
+                     <http://www.w3.org/2004/02/skos/core#broader> :Engineering ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                     <http://www.w3.org/2004/02/skos/core#related> :ComputerScience ,
+                                                                   :DataScience ,
+                                                                   :InformationScience ,
+                                                                   :InteractionDesign ,
+                                                                   :SystemsEngineering ;
+                     <http://www.w3.org/2004/02/skos/core#altLabel> "Software-Engineering"@en ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Software Engineering"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SonicArts
+:SonicArts rdf:type owl:NamedIndividual ,
+                    :FieldOfStudyConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :Arts ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+           <http://www.w3.org/2004/02/skos/core#altLabel> "Sonic-Arts"@en ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Sonic Arts"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SoundStudies
+:SoundStudies rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :MediaStudies ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :Aesthetics ,
+                                                            :FilmStudies ,
+                                                            :PerformanceStudies ,
+                                                            :Semiotics ,
+                                                            :SonicArts ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Sound-Studies"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Sound Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Sovereignty
+:Sovereignty rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :Territory ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Sovereignty"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SpatialData
+:SpatialData rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#related> :Maps ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Spatial-Data"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Spatial Data"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SpatialJusticeStudies
+:SpatialJusticeStudies rdf:type owl:NamedIndividual ,
+                                :FieldOfStudyConcept ;
+                       <http://www.w3.org/2004/02/skos/core#broader> :UrbanStudies ;
+                       <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                       <http://www.w3.org/2004/02/skos/core#related> :GenderStudies ,
+                                                                     :MigrationStudies ,
+                                                                     :PoliticalTheory ,
+                                                                     :SocialGeography ;
+                       <http://www.w3.org/2004/02/skos/core#altLabel> "Spatial-Justice-Studies"@en ;
+                       <http://www.w3.org/2004/02/skos/core#prefLabel> "Spatial Justice Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Specter
+:Specter rdf:type owl:NamedIndividual ,
+                  :TopicConcept ;
+         <http://www.w3.org/2004/02/skos/core#broader> :Hauntology ;
+         <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+         <http://www.w3.org/2004/02/skos/core#prefLabel> "Specter"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Specters_of_Marx_The_State_of_the_Debt_the_Work_of_Mourning_and_the_New_International
+:Specters_of_Marx_The_State_of_the_Debt_the_Work_of_Mourning_and_the_New_International rdf:type owl:NamedIndividual ,
+                                                                                                :TextualWork ,
+                                                                                                :Work ;
+                                                                                       :hasCreator :Jacques_Derrida ;
+                                                                                       :ISBN_10 "0415910455" ;
+                                                                                       :synopsis """Specters of Marxis a major new book from the renowned French philosopher Jacques Derrida. It represents his first important statement on Marx and his definitive entry into social and political philosophy .
+
+\"Specter\" is the first noun one reads in The Manifesto ofthe Communist Party.But that's just the beginning. Once you start to notice them, there is no counting all the ghosts, spirits, specters and spooks that crowd Marx's text. If they are to count for something, however, one must question the spectropoetics that Marx allowed to invade his discourse. In Specters of Marx,Derrida undertakes this task within the context of a critique of the new dogmatism and \"new world order\" that have proclaimed the death of Marxism and of Marx.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Statistics
+:Statistics rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Statistics"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Stephane_Rosiere
+:Stephane_Rosiere rdf:type owl:NamedIndividual ,
+                           :Person ;
+                  :wikidataQID "https://www.wikidata.org/entity/Q3502051" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SystemsEngineering
+:SystemsEngineering rdf:type owl:NamedIndividual ,
+                             :FieldOfStudyConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :Engineering ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :ComplexityScience ,
+                                                                  :Cybernetics ,
+                                                                  :DataScience ,
+                                                                  :SoftwareEngineering ,
+                                                                  :SystemsScience ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Systems-Engineering"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Systems Engineering"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#SystemsScience
+:SystemsScience rdf:type owl:NamedIndividual ,
+                         :FieldOfStudyConcept ;
+                <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                <http://www.w3.org/2004/02/skos/core#altLabel> "Systems-Science"@en ;
+                <http://www.w3.org/2004/02/skos/core#prefLabel> "Systems Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Tail_eating
+:Tail_eating rdf:type owl:NamedIndividual ,
+                      :TextualWork ,
+                      :Work ;
+             :hasCreator :Luna_Joubert ;
+             :publicationDate "2025-05-01"^^xsd:date ;
+             <http://purl.org/dc/terms/creator> :Luna_Joubert .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Territorialization
+:Territorialization rdf:type owl:NamedIndividual ,
+                             :TopicConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :Rhizome ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Territorialization"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Territory
+:Territory rdf:type owl:NamedIndividual ,
+                    :TopicConcept ;
+           <http://www.w3.org/2004/02/skos/core#broader> :Politics ;
+           <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+           <http://www.w3.org/2004/02/skos/core#related> :NationStates ;
+           <http://www.w3.org/2004/02/skos/core#prefLabel> "Territory"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_Aesthetics_of_Decay_Nothingness_Nostalgia_and_the_Absence_of_Reason
+:The_Aesthetics_of_Decay_Nothingness_Nostalgia_and_the_Absence_of_Reason rdf:type owl:NamedIndividual ,
+                                                                                  :TextualWork ,
+                                                                                  :Work ;
+                                                                         :hasCreator :Dylan_Trigg ;
+                                                                         :ISBN_13 "9780820486468" ;
+                                                                         :publicationDate "2006"^^xsd:gYear ;
+                                                                         :synopsis "In The Aesthetics of Decay, Dylan Trigg confronts the remnants from the fallout of post-industrialism and postmodernism. Through a considered analysis of memory, place, and nostalgia, Trigg argues that the decline of reason enables a critique of progress to emerge. In this ambitious work, Trigg aims to reassess the direction of progress by situating it in a spatial context. In doing so, he applies his critique of rationality to modern ruins. The derelict factory, abandoned asylum, and urban alleyway all become allies in Trigg's attack on a fixed image of temporality and progress. The Aesthetics of Decay offers a model of post-rational aesthetics in which spatial order is challenged by an affirmative ethics of ruin." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_Aleph_and_Other_Stories
+:The_Aleph_and_Other_Stories rdf:type owl:NamedIndividual ,
+                                      :Work ;
+                             :containsWork :On_Exactitude_in_Science ;
+                             :hasCreator :Jorge_Luis_Borges ;
+                             :ISBN_13 "9780142437889" ;
+                             :publicationDate "2004"^^xsd:gYear ;
+                             :synopsis """Full of philosophical puzzles and supernatural surprises, this collection of stories from the influential Argentinian author contains some of his most fully realized human characters .
+
+With uncanny insight, Jorge Luis Borges takes us inside the minds of an unrepentant Nazi, an imprisoned Mayan priest, fanatical Christian theologians, a woman plotting vengeance on her father’s “killer,” and a man awaiting his assassin in a Buenos Aires guest house. This anthology also contains the hauntingly brief vignettes about literary imagination and personal identity collected in The Maker, which Borges wrote as failing eyesight and public fame began to undermine his sense of self.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_Human_Condition
+:The_Human_Condition rdf:type owl:NamedIndividual ,
+                              :TextualWork ,
+                              :Work ;
+                     :hasCreator :Hannah_Arendt ;
+                     :ISBN_13 "9780226924571" ;
+                     :publicationDate "1958"^^xsd:gYear ;
+                     :synopsis """A work of striking originality bursting with unexpected insights, The Human Condition is in many respects more relevant now than when it first appeared in 1958. In her study of the state of modern humanity, Hannah Arendt considers humankind from the perspective of the actions of which it is capable. The problems Arendt identified then—diminishing human agency and political freedom, the paradox that as human powers increase through technological and humanistic inquiry, we are less equipped to control the consequences of our actions—continue to confront us today. This new edition, published to coincide with the fortieth anniversary of its original publication, contains an improved and expanded index and a new introduction by noted Arendt scholar Margaret Canovan which incisively analyzes the book's argument and examines its present relevance. A classic in political and social theory, The Human Condition is a work that has proved both timeless and perpetually timely .
+
+Hannah Arendt (1906-1975) was one of the leading social theorists in the United States. Her Lectures on Kant's Political Philosophy and Love and Saint Augustine are also published by the University of Chicago Press.""" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_Invention_of_Whiteness_The_Long_History_of_a_Dangerous_Idea
+:The_Invention_of_Whiteness_The_Long_History_of_a_Dangerous_Idea rdf:type owl:NamedIndividual ,
+                                                                          :TextualWork ,
+                                                                          :Work ;
+                                                                 :hasCreator :Robert_Baird ;
+                                                                 rdfs:comment "https://www.theguardian.com/news/2021/apr/20/the-invention-of-whiteness-long-history-dangerous-idea" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_White_House
+:The_White_House rdf:type owl:NamedIndividual ,
+                          :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#The_life_of_walls_In_urban_spatial_and_political_theory
+:The_life_of_walls_In_urban_spatial_and_political_theory rdf:type owl:NamedIndividual ,
+                                                                  :TextualWork ,
+                                                                  :Work ;
+                                                         :hasCreator :Andrea_Mubi_Brighenti ,
+                                                                     :Mattias_Karrholm .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#TheoreticalComputerScience
+:TheoreticalComputerScience rdf:type owl:NamedIndividual ,
+                                     :FieldOfStudyConcept ;
+                            <http://www.w3.org/2004/02/skos/core#broader> :FormalSciences ;
+                            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                            <http://www.w3.org/2004/02/skos/core#altLabel> "Theoretical-Computer-Science"@en ;
+                            <http://www.w3.org/2004/02/skos/core#prefLabel> "Theoretical Computer Science"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#TopicScheme
+:TopicScheme rdf:type owl:NamedIndividual ,
+                      <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#TranslationStudies
+:TranslationStudies rdf:type owl:NamedIndividual ,
+                             :FieldOfStudyConcept ;
+                    <http://www.w3.org/2004/02/skos/core#broader> :LanguageStudies ;
+                    <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+                    <http://www.w3.org/2004/02/skos/core#related> :ComparativeLiterature ,
+                                                                  :CulturalStudies ,
+                                                                  :Hermeneutics ,
+                                                                  :Linguistics ,
+                                                                  :Philology ;
+                    <http://www.w3.org/2004/02/skos/core#altLabel> "Translation-Studies"@en ;
+                    <http://www.w3.org/2004/02/skos/core#prefLabel> "Translation Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#USAID
+:USAID rdf:type owl:NamedIndividual ,
+                :Organization .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Uncanny_Logic
+:Uncanny_Logic rdf:type owl:NamedIndividual ,
+                        :TopicConcept ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Uncanny-Logic"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Uncanny Logic"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#University_of_Amsterdam
+:University_of_Amsterdam rdf:type owl:NamedIndividual ,
+                                  :Organization ;
+                         <http://www.w3.org/2004/02/skos/core#altLabel> "UvA" .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#UrbanMorphology
+:UrbanMorphology rdf:type owl:NamedIndividual ,
+                          :TopicConcept ;
+                 <http://www.w3.org/2004/02/skos/core#broader> :Infrastructure ;
+                 <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                 <http://www.w3.org/2004/02/skos/core#related> :UrbanSpaces ;
+                 <http://www.w3.org/2004/02/skos/core#altLabel> "Urban-Morphology"@en ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> "Urban Morphology"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#UrbanPlanning
+:UrbanPlanning rdf:type owl:NamedIndividual ,
+                        :FieldOfStudyConcept ;
+               <http://www.w3.org/2004/02/skos/core#broader> :AppliedSciences ;
+               <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+               <http://www.w3.org/2004/02/skos/core#related> :Architecture ,
+                                                             :CivilEngineering ,
+                                                             :LandscapeArchitecture ,
+                                                             :ServiceDesign ,
+                                                             :SocialGeography ,
+                                                             :UrbanStudies ;
+               <http://www.w3.org/2004/02/skos/core#altLabel> "Urban-Planning"@en ;
+               <http://www.w3.org/2004/02/skos/core#prefLabel> "Urban Planning"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#UrbanSpaces
+:UrbanSpaces rdf:type owl:NamedIndividual ,
+                      :TopicConcept ;
+             <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+             <http://www.w3.org/2004/02/skos/core#altLabel> "Urban-Spaces"@en ;
+             <http://www.w3.org/2004/02/skos/core#prefLabel> "Urban Spaces"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#UrbanStudies
+:UrbanStudies rdf:type owl:NamedIndividual ,
+                       :FieldOfStudyConcept ;
+              <http://www.w3.org/2004/02/skos/core#broader> :SocialSciences ;
+              <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+              <http://www.w3.org/2004/02/skos/core#related> :Architecture ,
+                                                            :GenderStudies ,
+                                                            :HumanGeography ,
+                                                            :SocialGeography ,
+                                                            :UrbanPlanning ;
+              <http://www.w3.org/2004/02/skos/core#altLabel> "Urban-Studies"@en ;
+              <http://www.w3.org/2004/02/skos/core#prefLabel> "Urban Studies"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Urban_Walls_Political_and_Cultural_Meanings_of_Vertical_Structures_and_Surfaces
+:Urban_Walls_Political_and_Cultural_Meanings_of_Vertical_Structures_and_Surfaces rdf:type owl:NamedIndividual ,
+                                                                                          :TextualWork ,
+                                                                                          :Work ;
+                                                                                 :hasCreator :Andrea_Mubi_Brighenti ;
+                                                                                 :DOI "10.4324/9780203730225" ;
+                                                                                 :ISBN_13 "9780203730225" ;
+                                                                                 :abstract "In recent years, an increasing number of separation walls have been built around the world. Walls built in urban areas are particularly striking in that they have exacted a heavy toll in terms of human suffering. As territorialising devices, walls can be protective, but the protection they grant is never straightforward. This collection invites inquiry into the complexities of the social life of walls, observing urban spaces as veritable laboratories of wall-making - places where their consequences become most visible. A study of the relationship between walls and politics, the cultural meaning of walls and their visibility, whether as barriers or as legible - sometimes spectacular - surfaces, and their importance for social processes, Urban Walls shows how walls extend into media spaces, thus drawing a multidimensional geography of separation, connection, control and resistance. As such, the collection will appeal to scholars of sociology, anthropology, geography, architecture and politics with interests in urban studies and social theory. © 2019 Andrea Mubi Brighenti and Mattias Kärrholm. All rights reserved." .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#VisualArts
+:VisualArts rdf:type owl:NamedIndividual ,
+                     :FieldOfStudyConcept ;
+            <http://www.w3.org/2004/02/skos/core#broader> :Arts ;
+            <http://www.w3.org/2004/02/skos/core#inScheme> :FieldOfStudyScheme ;
+            <http://www.w3.org/2004/02/skos/core#altLabel> "Visual-Arts"@en ;
+            <http://www.w3.org/2004/02/skos/core#prefLabel> "Visual Arts"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#VisualCommunication
+:VisualCommunication rdf:type owl:NamedIndividual ,
+                              :TopicConcept ;
+                     <http://www.w3.org/2004/02/skos/core#inScheme> :TopicScheme ;
+                     <http://www.w3.org/2004/02/skos/core#altLabel> "Visual-Communication"@en ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> "Visual Communication"@en .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Void_Universalis
+:Void_Universalis rdf:type owl:NamedIndividual ,
+                           <http://www.w3.org/2004/02/skos/core#OrderedCollection> .
+
+
+###  https://everythingisasign.com/ontology/eias-ontology#Wall_Behaviour_Research_publication_to_accompany_the_work_even_buildings_sway
+:Wall_Behaviour_Research_publication_to_accompany_the_work_even_buildings_sway rdf:type owl:NamedIndividual ,
+                                                                                        :TextualWork ,
+                                                                                        :Work ;
+                                                                               :hasCreator :Laude_Emanuel ;
+                                                                               :publicationDate "2025-05-20"^^xsd:date ;
+                                                                               <http://purl.org/dc/terms/creator> :Laude_Emanuel ;
+                                                                               :synopsis """This research explores the gendered experience of urban space through the embodied perspective of a woman navigating the city of Rotterdam. Drawing from feminist geography, the project examines how both physical structures (benches, porches, public restrooms) and social expectations shape movement, visibility, and access in the city. What may seem like neutral urban elements are revealed to be part of a socio-physical system that privileges male presence while regulating and limiting others .
+
+Using the dérive as a central method—expanded with choreographic tools and personal reflection—the research documents how urban navigation becomes a performance of safety. The dérive, traditionally imagined as a free and purposeless wander, is shown to be a gendered act, constrained by internalised caution and external threat. The body’s reactions become data, revealing the invisible boundaries of public space .
+
+The city is approached not only as a site of infrastructure but as a stage of social choreography, where fear, surveillance, and exclusion shape how one moves and feels. Through embodied mapping and spatial observation, the work visualises how urban design and culture interlock to form a landscape of constraint. Rather than proposing urban fixes, this project aims to make visible the everyday limitations placed on female and marginalised bodies. It asks who the city truly serves, and how spatial justice might be reimagined when we start from lived experience. As Edward Soja notes in ‘The city and spatcial justice’ (2009), if space is socially produced, then it is open to be socially changed.""" .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi
