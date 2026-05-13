@@ -18,6 +18,7 @@ DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # spaCy model
 SPACY_MODEL = os.getenv("SPACY_MODEL", "en_core_web_lg")
+SPACY_MODEL_VERSION = os.getenv("SPACY_MODEL_VERSION", "3.8.0")
 
 # External API endpoints
 WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php"

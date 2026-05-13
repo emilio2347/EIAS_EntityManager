@@ -26,6 +26,7 @@
     --tag-loc: #fb923c;
     --tag-work: #a78bfa;
     --tag-event: #38bdf8;
+    --tag-concept: #facc15;
     --tag-default: #94a3b8;
     --radius: 14px;
     --radius-large: 24px;
@@ -373,6 +374,7 @@ button:disabled {
 .tag-LOC { background: var(--tag-loc); color: white; }
 .tag-WORK_OF_ART { background: var(--tag-work); color: white; }
 .tag-EVENT { background: var(--tag-event); color: white; }
+.tag-CONCEPT { background: var(--tag-concept); color: #1f2937; }
 .tag-default { background: var(--tag-default); color: white; }
 
 /* Grounding status dot */

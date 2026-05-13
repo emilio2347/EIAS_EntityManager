@@ -5,13 +5,17 @@ from __future__ import annotations
 import json
 import logging
 from typing import Any
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 
-import httpx
 from sqlalchemy.orm import Session
 
-from app.config import HTTP_HEADERS, WIKIDATA_SPARQL_URL
 from app.models import AppSetting, Entity, EnrichmentProperty
+from app.services.grounding_wikidata import (
+    claims_to_properties,
+    fetch_wikidata_entity,
+    first_claim_value,
+    wikidata_commons_file_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -132,54 +136,29 @@ def qid_from_wikidata_uri(uri: str | None) -> str | None:
 
 async def resolve_wikidata_external_uris(qid: str) -> dict[str, str]:
     """Resolve other source URIs that can be inferred from a Wikidata item."""
-    sparql = f"""
-    SELECT ?worldcat ?viaf ?isni ?lccn ?article WHERE {{
-        OPTIONAL {{ wd:{qid} wdt:P10832 ?worldcat . }}
-        OPTIONAL {{ wd:{qid} wdt:P214 ?viaf . }}
-        OPTIONAL {{ wd:{qid} wdt:P213 ?isni . }}
-        OPTIONAL {{ wd:{qid} wdt:P244 ?lccn . }}
-        OPTIONAL {{
-            ?article schema:about wd:{qid} ;
-                     schema:isPartOf <https://en.wikipedia.org/> .
-        }}
-    }}
-    LIMIT 1
-    """
-
-    async with httpx.AsyncClient(timeout=20, headers=HTTP_HEADERS) as client:
-        resp = await client.get(
-            WIKIDATA_SPARQL_URL,
-            params={"query": sparql, "format": "json"},
-            headers={"Accept": "application/sparql-results+json"},
-        )
-        resp.raise_for_status()
-        data = resp.json()
-
-    bindings = data.get("results", {}).get("bindings", [])
-    if not bindings:
+    entity = await fetch_wikidata_entity(qid, props="claims|sitelinks")
+    if not entity:
         return {}
 
-    row = bindings[0]
     uris: dict[str, str] = {}
-    worldcat = row.get("worldcat", {}).get("value")
+    worldcat = first_claim_value(entity, "P10832")
     if worldcat:
         uris["worldcat_uri"] = _FORMATTERS["P10832"].format(value=worldcat)
 
-    article = row.get("article", {}).get("value")
-    if article and "/wiki/" in article:
-        title = unquote(article.rsplit("/wiki/", 1)[-1])
-        if title:
-            uris["dbpedia_uri"] = f"https://dbpedia.org/resource/{title}"
+    title = entity.get("sitelinks", {}).get("enwiki", {}).get("title")
+    if title:
+        dbpedia_title = quote(title.replace(" ", "_"), safe="()_,")
+        uris["dbpedia_uri"] = f"https://dbpedia.org/resource/{dbpedia_title}"
 
-    viaf = row.get("viaf", {}).get("value")
+    viaf = first_claim_value(entity, "P214")
     if viaf:
         uris["viaf_uri"] = _FORMATTERS["P214"].format(value=viaf)
 
-    isni = row.get("isni", {}).get("value")
+    isni = first_claim_value(entity, "P213")
     if isni:
         uris["isni_uri"] = _FORMATTERS["P213"].format(value=isni.replace(" ", ""))
 
-    lccn = row.get("lccn", {}).get("value")
+    lccn = first_claim_value(entity, "P244")
     if lccn:
         uris["loc_uri"] = _FORMATTERS["P244"].format(value=lccn)
 
@@ -188,73 +167,23 @@ async def resolve_wikidata_external_uris(qid: str) -> dict[str, str]:
 
 async def fetch_wikidata_image_url(qid: str) -> str | None:
     """Return a Commons Special:FilePath URL for a Wikidata P18 image."""
-    sparql = f"""
-    SELECT ?image WHERE {{
-        wd:{qid} wdt:P18 ?image .
-    }}
-    LIMIT 1
-    """
-
-    async with httpx.AsyncClient(timeout=20, headers=HTTP_HEADERS) as client:
-        resp = await client.get(
-            WIKIDATA_SPARQL_URL,
-            params={"query": sparql, "format": "json"},
-            headers={"Accept": "application/sparql-results+json"},
-        )
-        resp.raise_for_status()
-        data = resp.json()
-
-    bindings = data.get("results", {}).get("bindings", [])
-    if not bindings:
-        return None
-
-    raw = bindings[0].get("image", {}).get("value", "")
-    filename = unquote(raw.rsplit("/", 1)[-1]) if raw else ""
+    entity = await fetch_wikidata_entity(qid, props="claims")
+    filename = first_claim_value(entity, "P18")
     if not filename:
         return None
-    return f"https://commons.wikimedia.org/wiki/Special:FilePath/{quote(filename)}"
+    return wikidata_commons_file_url(str(filename))
 
 
 async def fetch_standard_properties(qid: str, property_ids: list[str]) -> list[dict[str, str]]:
     if not property_ids:
         return []
 
-    values = " ".join(f"wd:{pid}" for pid in property_ids)
-    sparql = f"""
-    SELECT ?prop ?propLabel ?value ?valueLabel WHERE {{
-        VALUES ?prop {{ {values} }}
-        ?prop wikibase:directClaim ?directProp .
-        wd:{qid} ?directProp ?value .
-        SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" . }}
-    }}
-    LIMIT 200
-    """
-
-    async with httpx.AsyncClient(timeout=20, headers=HTTP_HEADERS) as client:
-        resp = await client.get(
-            WIKIDATA_SPARQL_URL,
-            params={"query": sparql, "format": "json"},
-            headers={"Accept": "application/sparql-results+json"},
-        )
-        resp.raise_for_status()
-        data = resp.json()
-
-    props: list[dict[str, str]] = []
-    for binding in data.get("results", {}).get("bindings", []):
-        prop_uri = binding.get("prop", {}).get("value", "")
-        prop_id = prop_uri.rstrip("/").split("/")[-1]
-        raw_value = binding.get("value", {}).get("value", "")
-        display_value = binding.get("valueLabel", {}).get("value") or raw_value
-        if prop_id in _FORMATTERS and raw_value:
-            display_value = _FORMATTERS[prop_id].format(value=raw_value.replace(" ", ""))
-
-        props.append({
-            "property_uri": prop_uri,
-            "property_name": binding.get("propLabel", {}).get("value", prop_id),
-            "value": display_value,
-            "source": "wikidata",
-        })
-
+    entity = await fetch_wikidata_entity(qid, props="claims")
+    props = await claims_to_properties(entity, property_ids=property_ids)
+    for prop in props:
+        prop_id = prop.get("property_id", prop["property_uri"].rstrip("/").split("/")[-1])
+        if prop_id in _FORMATTERS and prop.get("value"):
+            prop["value"] = _FORMATTERS[prop_id].format(value=prop["value"].replace(" ", ""))
     return props
 
 

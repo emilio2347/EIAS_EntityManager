@@ -40,6 +40,7 @@ async function clearAllEntities() {
 async function loadEntities() {
     const container = document.getElementById('entity-list');
     if (!container) return;
+    await loadKnownNerTypes();
 
     const q = document.getElementById('entity-search')?.value || '';
     const entityType = document.getElementById('entity-type-filter')?.value || '';

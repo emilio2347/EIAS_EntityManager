@@ -2,11 +2,11 @@
    EIAS Entity Manager — App Router & Shared Utilities
    ======================================== */
 
-// All known NER entity types
-const ENTITY_TYPES = [
+// All known NER entity types. Updated from /api/profiles/types on load.
+let ENTITY_TYPES = [
     'PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT',
     'DATE', 'NORP', 'FAC', 'PRODUCT', 'LAW', 'LANGUAGE',
-    'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', 'PERCENT', 'TIME', 'MISC',
+    'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', 'PERCENT', 'TIME', 'MISC', 'CONCEPT',
 ];
 
 let _activeProfile = null;
@@ -31,6 +31,36 @@ function initializeUiTheme() {
         localStorage.setItem('eias.uiTheme', nextTheme);
         applyUiTheme(nextTheme);
     });
+}
+
+function setEntityTypes(types) {
+    const seen = new Set();
+    ENTITY_TYPES = (types || [])
+        .map(t => String(t || '').trim().toUpperCase())
+        .filter(t => t && !seen.has(t) && seen.add(t));
+    populateEntityTypeSelects();
+}
+
+function entityTypeOptionsHtml(selectedValue = '', includeAllOption = false) {
+    const selected = String(selectedValue || '').toUpperCase();
+    const options = includeAllOption ? '<option value="">All types</option>' : '';
+    return options + ENTITY_TYPES.map(t =>
+        `<option value="${t}" ${t === selected ? 'selected' : ''}>${t}</option>`
+    ).join('');
+}
+
+function populateEntityTypeSelects() {
+    const entityFilter = document.getElementById('entity-type-filter');
+    if (entityFilter) {
+        const current = entityFilter.value;
+        entityFilter.innerHTML = entityTypeOptionsHtml(current, true);
+    }
+
+    const mappingSelect = document.getElementById('mapping-spacy-label');
+    if (mappingSelect) {
+        const current = mappingSelect.value;
+        mappingSelect.innerHTML = entityTypeOptionsHtml(current, false);
+    }
 }
 
 // Navigation
@@ -101,7 +131,7 @@ async function apiUpload(path, formData) {
  * @param {string} [entityId] - If provided, tag becomes clickable to change the type
  */
 function entityTypeTag(type, entityId) {
-    const colorTypes = ['PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT'];
+    const colorTypes = ['PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT', 'CONCEPT'];
     const cls = colorTypes.includes(type) ? `tag-${type}` : 'tag-default';
 
     if (entityId) {
@@ -119,13 +149,9 @@ function openTypeEditor(entityId, currentType, tagElement) {
     // Don't open if already editing
     if (tagElement.dataset.editing === 'true') return;
 
-    const options = ENTITY_TYPES.map(t =>
-        `<option value="${t}" ${t === currentType ? 'selected' : ''}>${t}</option>`
-    ).join('');
-
     const select = document.createElement('select');
     select.className = 'type-editor-select';
-    select.innerHTML = options;
+    select.innerHTML = entityTypeOptionsHtml(currentType, false);
 
     // Replace the tag with the select
     tagElement.replaceWith(select);

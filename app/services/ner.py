@@ -10,7 +10,7 @@ import spacy
 from rapidfuzz import fuzz
 from sqlalchemy.orm import Session
 
-from app.config import SPACY_MODEL
+from app.config import SPACY_MODEL, SPACY_MODEL_VERSION
 from app.models import Entity, Mention, OntologyMapping
 from app.services.app_settings import get_pipeline_settings
 
@@ -29,6 +29,11 @@ def get_nlp(model_name: str | None = None, coreference_enabled: bool = True):
     if _nlp is None or _nlp_key != cache_key:
         logger.info("Loading spaCy model: %s", resolved_model)
         _nlp = spacy.load(resolved_model)
+        model_version = _nlp.meta.get("version")
+        if resolved_model == SPACY_MODEL and model_version != SPACY_MODEL_VERSION:
+            raise RuntimeError(
+                f"{SPACY_MODEL} {SPACY_MODEL_VERSION} is required, but loaded version {model_version or 'unknown'}"
+            )
         _nlp_key = cache_key
         # Try to add coreferee if available
         if coreference_enabled:

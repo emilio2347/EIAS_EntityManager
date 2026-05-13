@@ -333,7 +333,7 @@ function normalizeInlineLabel(value) {
 
 
 function documentEntityClass(type) {
-    const colorTypes = ['PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT'];
+    const colorTypes = ['PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT', 'CONCEPT'];
     return colorTypes.includes(type) ? `tag-${type}` : 'tag-default';
 }
 
@@ -468,7 +468,7 @@ function showDocumentSelectionPrompt() {
     prompt.style.left = `${Math.min(window.innerWidth - 170, Math.max(12, rect.left + window.scrollX))}px`;
     prompt.style.top = `${rect.bottom + window.scrollY + 8}px`;
     prompt.innerHTML = `
-        <button class="btn btn-primary btn-sm" onclick="addEntityFromDocumentSelection()">Add</button>
+        <button class="btn btn-primary btn-sm" onclick="openDocumentAddEntityModal()">Add</button>
         <button class="btn btn-sm" onclick="openDocumentMentionMergeModal()">Merge</button>
     `;
     document.body.appendChild(prompt);
@@ -508,7 +508,7 @@ function charOffsetFromNode(node, offset, container) {
 async function addEntityFromDocumentSelection() {
     if (!_currentDocumentViewDoc || !_documentSelectionRange) return;
     const range = _documentSelectionRange;
-    removeDocumentSelectionPrompt();
+    const type = document.getElementById('document-new-entity-type')?.value || 'MISC';
     try {
         const result = await api(`/documents/${_currentDocumentViewDoc.id}/entities`, {
             method: 'POST',
@@ -516,14 +516,35 @@ async function addEntityFromDocumentSelection() {
                 label: range.text,
                 start_char: range.start_char,
                 end_char: range.end_char,
-                entity_type: 'MISC',
+                entity_type: type,
             }),
         });
+        closeModal();
         await loadDocumentView(_currentDocumentViewDoc.id);
         showDocumentEntityFocus(result.entity_id);
     } catch (err) {
         alert('Error: ' + err.message);
     }
+}
+
+
+async function openDocumentAddEntityModal() {
+    if (!_currentDocumentViewDoc || !_documentSelectionRange) return;
+    removeDocumentSelectionPrompt();
+    await loadKnownNerTypes();
+    const html = `
+        <h2 style="margin-bottom: 1rem;">Add Entity</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Create "${escapeHtml(_documentSelectionRange.text)}" as a new entity.</p>
+        <div class="custom-uri-row">
+            <label for="document-new-entity-type">Type:</label>
+            <select id="document-new-entity-type">${entityTypeOptionsHtml('MISC', false)}</select>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+            <button class="btn btn-primary" onclick="addEntityFromDocumentSelection()">Create</button>
+            <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+    openModal(html);
 }
 
 

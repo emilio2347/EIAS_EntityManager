@@ -68,9 +68,9 @@ def update_pipeline_settings(
     db: Session = Depends(get_db),
 ):
     """Persist runtime-tunable pipeline settings."""
-    data = body.model_dump(exclude_none=True)
+    data = body.model_dump(exclude_none=True) if hasattr(body, "model_dump") else body.dict(exclude_none=True)
     updated = set_pipeline_settings(db, data)
     return {
-        "settings": updated.model_dump(),
+        "settings": updated.model_dump() if hasattr(updated, "model_dump") else updated.dict(),
         "status": pipeline_runtime_status(db),
     }

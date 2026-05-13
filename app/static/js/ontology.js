@@ -24,6 +24,8 @@ document.getElementById('ontology-upload-form')?.addEventListener('submit', asyn
 
 
 async function loadOntologyData() {
+    await loadKnownNerTypes();
+    populateEntityTypeSelects();
     await Promise.all([loadOntologyClasses(), loadMappings()]);
 }
 

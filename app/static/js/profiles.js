@@ -27,6 +27,7 @@ const NER_TYPE_DESCRIPTIONS = {
     PERCENT: 'Percentage expressions.',
     TIME: 'Times smaller than a day.',
     MISC: 'Manually added entities that need a more specific type later.',
+    CONCEPT: 'Abstract concepts, theories, ideas, categories, and recurring topics.',
 };
 
 
@@ -35,8 +36,10 @@ async function loadKnownNerTypes() {
     try {
         const data = await api('/profiles/types');
         _knownNerTypes = data.types || [];
+        setEntityTypes(_knownNerTypes);
     } catch {
         _knownNerTypes = [...ENTITY_TYPES];
+        setEntityTypes(_knownNerTypes);
     }
     return _knownNerTypes;
 }
@@ -207,6 +210,33 @@ document.getElementById('profile-form')?.addEventListener('submit', async (e) =>
 document.getElementById('profile-reset-btn')?.addEventListener('click', resetProfileForm);
 
 
+document.getElementById('ner-type-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('ner-type-label');
+    const label = input.value.trim();
+    if (!label) {
+        showStatus('ner-type-status', 'Enter a label first.', 'error');
+        return;
+    }
+
+    const selectedBeforeCreate = new Set(readSelectedTypes());
+    try {
+        const result = await api('/profiles/types', {
+            method: 'POST',
+            body: JSON.stringify({ label }),
+        });
+        _knownNerTypes = result.types || [];
+        setEntityTypes(_knownNerTypes);
+        selectedBeforeCreate.add(result.label);
+        renderTypeCheckboxes(selectedBeforeCreate);
+        input.value = '';
+        showStatus('ner-type-status', `Entity type ${result.label} is available. Select it in profiles that should keep it during extraction.`, 'success');
+    } catch (err) {
+        showStatus('ner-type-status', `Error: ${err.message}`, 'error');
+    }
+});
+
+
 async function deleteProfile(profileId) {
     if (!confirm('Delete this extraction profile?')) return;
     try {
@@ -307,8 +337,13 @@ function renderPipelineRuntimeStatus(data) {
     const statusEl = document.getElementById('pipeline-runtime-status');
     if (!statusEl) return;
     const corefReady = data.coreferee_installed && data.coreferee_pipe_available;
+    const modelVersionText = data.spacy_model_version
+        ? `model ${escapeHtml(data.spacy_model_version)}`
+        : 'model version unknown';
+    const modelOk = data.spacy_model_installed && (data.spacy_model_version_ok ?? true);
     statusEl.innerHTML = `
-        <div class="runtime-pill ${data.spacy_model_installed ? 'ok' : 'bad'}">spaCy ${escapeHtml(data.spacy_version || '')}: ${data.spacy_model_installed ? 'model installed' : 'model missing'}</div>
+        <div class="runtime-pill ${modelOk ? 'ok' : 'bad'}">spaCy ${escapeHtml(data.spacy_version || '')}: ${data.spacy_model_installed ? modelVersionText : 'model missing'}</div>
+        ${data.spacy_model_required_version && !data.spacy_model_version_ok ? `<div class="status-msg error">Expected en_core_web_lg ${escapeHtml(data.spacy_model_required_version)}.</div>` : ''}
         <div class="runtime-pill ${corefReady ? 'ok' : 'bad'}">coreferee: ${corefReady ? 'ready' : 'not ready'}</div>
         ${data.coreferee_error ? `<div class="status-msg error">${escapeHtml(data.coreferee_error)}</div>` : ''}
     `;

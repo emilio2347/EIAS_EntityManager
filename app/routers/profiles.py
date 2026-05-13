@@ -3,23 +3,90 @@
 from __future__ import annotations
 
 import json
+import re
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Document, Entity, ExtractionProfile
+from app.models import AppSetting, Document, Entity, ExtractionProfile
 
 router = APIRouter()
 
 
-# All NER labels spaCy's en_core_web_* models can produce.
-ALL_NER_TYPES: list[str] = [
+# Default labels spaCy's en_core_web_* models can produce, plus locally useful
+# labels that can be assigned manually or emitted by a custom trained pipeline.
+BUILTIN_NER_TYPES: list[str] = [
     "PERSON", "ORG", "GPE", "LOC", "WORK_OF_ART", "EVENT",
     "DATE", "NORP", "FAC", "PRODUCT", "LAW", "LANGUAGE",
     "MONEY", "QUANTITY", "ORDINAL", "CARDINAL", "PERCENT", "TIME", "MISC",
+    "CONCEPT",
 ]
+CUSTOM_NER_TYPES_KEY = "ner.custom_types"
+NER_TYPE_RE = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
+
+
+def _normalize_type_label(label: str) -> str:
+    normalized = (label or "").strip().upper().replace("-", "_").replace(" ", "_")
+    normalized = re.sub(r"_+", "_", normalized)
+    if not NER_TYPE_RE.match(normalized):
+        raise HTTPException(
+            400,
+            "NER label must be 2-32 characters using uppercase letters, numbers, and underscores, and must start with a letter",
+        )
+    return normalized
+
+
+def _ordered_unique(labels: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for label in labels:
+        normalized = _normalize_type_label(label)
+        if normalized not in seen:
+            seen.add(normalized)
+            result.append(normalized)
+    return result
+
+
+def _load_custom_types(db: Session) -> list[str]:
+    setting = db.query(AppSetting).filter(AppSetting.key == CUSTOM_NER_TYPES_KEY).first()
+    if not setting:
+        return []
+    try:
+        data = json.loads(setting.value)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    labels = []
+    for value in data:
+        try:
+            labels.append(_normalize_type_label(str(value)))
+        except HTTPException:
+            continue
+    return _ordered_unique(labels)
+
+
+def _store_custom_types(db: Session, labels: list[str]) -> list[str]:
+    custom = _ordered_unique(labels)
+    setting = db.query(AppSetting).filter(AppSetting.key == CUSTOM_NER_TYPES_KEY).first()
+    value = json.dumps(custom)
+    if setting:
+        setting.value = value
+    else:
+        db.add(AppSetting(key=CUSTOM_NER_TYPES_KEY, value=value))
+    db.commit()
+    return custom
+
+
+def _known_entity_types(db: Session) -> list[str]:
+    labels = [row[0] for row in db.query(Entity.entity_type).distinct().all() if row[0]]
+    return _ordered_unique(labels)
+
+
+def list_ner_types(db: Session) -> list[str]:
+    return _ordered_unique([*BUILTIN_NER_TYPES, *_load_custom_types(db), *_known_entity_types(db)])
 
 
 def _load_types(profile: ExtractionProfile) -> list[str]:
@@ -50,7 +117,7 @@ def _ensure_seed_profiles(db: Session) -> None:
         if profile is None:
             profile = ExtractionProfile(
                 name="All Types",
-                allowed_types=json.dumps(ALL_NER_TYPES),
+                allowed_types=json.dumps(list_ner_types(db)),
                 is_default=True,
             )
             db.add(profile)
@@ -66,9 +133,29 @@ def _ensure_seed_profiles(db: Session) -> None:
 
 
 @router.get("/types")
-def list_known_types():
+def list_known_types(db: Session = Depends(get_db)):
     """List all NER labels the UI can offer when defining a profile."""
-    return {"types": ALL_NER_TYPES}
+    return {"types": list_ner_types(db), "custom_types": _load_custom_types(db)}
+
+
+class NerTypeCreate(BaseModel):
+    label: str
+
+
+@router.post("/types")
+def create_custom_type(body: NerTypeCreate, db: Session = Depends(get_db)):
+    """Create a custom NER label for manual tagging and trained pipelines."""
+    label = _normalize_type_label(body.label)
+    custom = _load_custom_types(db)
+    if label not in BUILTIN_NER_TYPES and label not in custom:
+        custom.append(label)
+        custom = _store_custom_types(db, custom)
+    return {
+        "status": "created",
+        "label": label,
+        "types": list_ner_types(db),
+        "custom_types": custom,
+    }
 
 
 @router.get("")
@@ -94,7 +181,7 @@ def create_profile(body: ProfileCreate, db: Session = Depends(get_db)):
     if db.query(ExtractionProfile).filter(ExtractionProfile.name == name).first():
         raise HTTPException(409, f"A profile named '{name}' already exists")
 
-    cleaned_types = [t.strip().upper() for t in body.allowed_types if t and t.strip()]
+    cleaned_types = _ordered_unique([t for t in body.allowed_types if t and t.strip()])
     if not cleaned_types:
         raise HTTPException(400, "At least one NER type is required")
 
@@ -143,7 +230,7 @@ def update_profile(profile_id: str, body: ProfileUpdate, db: Session = Depends(g
         profile.name = new_name
 
     if body.allowed_types is not None:
-        cleaned = [t.strip().upper() for t in body.allowed_types if t and t.strip()]
+        cleaned = _ordered_unique([t for t in body.allowed_types if t and t.strip()])
         if not cleaned:
             raise HTTPException(400, "At least one NER type is required")
         profile.allowed_types = json.dumps(cleaned)

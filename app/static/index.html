@@ -9,7 +9,7 @@
             document.documentElement.classList.add('theme-boot-liquid-glass');
         }
     </script>
-    <link rel="stylesheet" href="/static/css/styles.css?v=20260513-grounding-selection">
+    <link rel="stylesheet" href="/static/css/styles.css?v=20260513-custom-ner-labels">
 </head>
 <body>
     <header>
@@ -51,6 +51,11 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
                     A profile owns its own documents, entities, and exports. Its entity type choices control what is kept when documents are uploaded into that profile.
                 </p>
+                <form id="ner-type-form" class="ner-type-form" style="margin-bottom: 1rem;">
+                    <input type="text" id="ner-type-label" placeholder="New label, e.g. CONCEPT">
+                    <button type="submit" class="btn btn-primary">Add Entity Type</button>
+                </form>
+                <div id="ner-type-status" class="status-msg"></div>
                 <div id="profile-list" class="item-list"></div>
             </div>
             <div class="panel">
@@ -167,17 +172,6 @@
                     <input type="text" id="entity-search" placeholder="Search entities...">
                     <select id="entity-type-filter">
                         <option value="">All types</option>
-                        <option value="PERSON">PERSON</option>
-                        <option value="ORG">ORG</option>
-                        <option value="GPE">GPE</option>
-                        <option value="LOC">LOC</option>
-                        <option value="WORK_OF_ART">WORK_OF_ART</option>
-                        <option value="EVENT">EVENT</option>
-                        <option value="DATE">DATE</option>
-                        <option value="NORP">NORP</option>
-                        <option value="FAC">FAC</option>
-                        <option value="PRODUCT">PRODUCT</option>
-                        <option value="MISC">MISC</option>
                     </select>
                     <select id="entity-grounded-filter">
                         <option value="">All</option>
@@ -221,19 +215,6 @@
                 <div id="mapping-editor"></div>
                 <form id="mapping-form" class="mapping-form">
                     <select id="mapping-spacy-label">
-                        <option value="PERSON">PERSON</option>
-                        <option value="ORG">ORG</option>
-                        <option value="GPE">GPE</option>
-                        <option value="LOC">LOC</option>
-                        <option value="WORK_OF_ART">WORK_OF_ART</option>
-                        <option value="EVENT">EVENT</option>
-                        <option value="DATE">DATE</option>
-                        <option value="NORP">NORP</option>
-                        <option value="FAC">FAC</option>
-                        <option value="PRODUCT">PRODUCT</option>
-                        <option value="LAW">LAW</option>
-                        <option value="LANGUAGE">LANGUAGE</option>
-                        <option value="MISC">MISC</option>
                     </select>
                     <select id="mapping-ontology-class"></select>
                     <button type="submit">Add Mapping</button>
@@ -269,13 +250,13 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js?v=20260512-feature-pass"></script>
-    <script src="/static/js/documents.js?v=20260513-anchored-focus"></script>
-    <script src="/static/js/entities.js?v=20260513-anchored-focus"></script>
-    <script src="/static/js/ontology.js?v=20260504-grounding"></script>
+    <script src="/static/js/app.js?v=20260513-custom-ner-labels"></script>
+    <script src="/static/js/documents.js?v=20260513-custom-ner-labels"></script>
+    <script src="/static/js/entities.js?v=20260513-custom-ner-labels"></script>
+    <script src="/static/js/ontology.js?v=20260513-custom-ner-labels"></script>
     <script src="/static/js/grounding.js?v=20260504-grounding"></script>
     <script src="/static/js/enrichment.js?v=20260512-docview-settings"></script>
     <script src="/static/js/export.js?v=20260504-grounding"></script>
-    <script src="/static/js/profiles.js?v=20260512-feature-pass"></script>
+    <script src="/static/js/profiles.js?v=20260513-custom-ner-labels"></script>
 </body>
 </html>

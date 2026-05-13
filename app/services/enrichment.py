@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Entity, EnrichmentProperty
 from app.services import grounding_wikidata, grounding_dbpedia
+from app.services.standard_triples import qid_from_wikidata_uri
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,11 @@ async def get_available_properties(entity_id: str, db: Session) -> list[dict[str
 
     # Wikidata properties
     if entity.wikidata_uri:
-        qid = entity.wikidata_uri.split("/")[-1]
+        qid = qid_from_wikidata_uri(entity.wikidata_uri)
         try:
-            wd_props = await grounding_wikidata.get_entity_properties(qid)
-            properties.extend(wd_props)
+            if qid:
+                wd_props = await grounding_wikidata.get_entity_properties(qid)
+                properties.extend(wd_props)
         except Exception as e:
             logger.warning("Failed to fetch Wikidata properties for %s: %s", qid, e)
 
