@@ -4,32 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIAS Entity Manager</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        if (localStorage.getItem('eias.uiTheme') !== 'classic') {
+            document.documentElement.classList.add('theme-boot-liquid-glass');
+        }
+    </script>
+    <link rel="stylesheet" href="/static/css/styles.css?v=20260513-grounding-selection">
 </head>
 <body>
     <header>
         <h1>EIAS Entity Manager</h1>
         <nav>
-            <button class="nav-btn active" data-view="documents">Documents</button>
+            <button class="nav-btn active" data-view="settings">Settings</button>
+            <button class="nav-btn" data-view="documents">Documents</button>
+            <button class="nav-btn" data-view="document-view">Document View</button>
             <button class="nav-btn" data-view="entities">Entities</button>
             <button class="nav-btn" data-view="ontology">Ontology</button>
-            <button class="nav-btn" data-view="profiles">Profiles</button>
             <button class="nav-btn" data-view="export">Export</button>
         </nav>
     </header>
 
     <main>
+        <!-- Settings View -->
+        <section id="view-settings" class="view active">
+            <div class="panel">
+                <h2>Active Profile</h2>
+                <div class="settings-profile-row">
+                    <label for="settings-active-profile-select">Profile</label>
+                    <select id="settings-active-profile-select"></select>
+                    <span id="active-profile-summary" class="settings-summary"></span>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Interface</h2>
+                <div class="settings-profile-row">
+                    <label for="settings-ui-theme-select">Theme</label>
+                    <select id="settings-ui-theme-select">
+                        <option value="liquid-glass">Liquid Glass</option>
+                        <option value="classic">Classic</option>
+                    </select>
+                    <span class="settings-summary">Controls the interface style for this browser.</span>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Extraction Profiles</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    A profile owns its own documents, entities, and exports. Its entity type choices control what is kept when documents are uploaded into that profile.
+                </p>
+                <div id="profile-list" class="item-list"></div>
+            </div>
+            <div class="panel">
+                <h2 id="profile-form-title">New Profile</h2>
+                <form id="profile-form">
+                    <input type="hidden" id="profile-id">
+                    <input type="text" id="profile-name" placeholder="Profile name" required>
+                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">
+                        <input type="checkbox" id="profile-is-default"> Default
+                    </label>
+                    <div style="flex-basis: 100%;"></div>
+                    <div id="profile-types-grid" class="profile-types-grid"></div>
+                    <div style="flex-basis: 100%; display: flex; gap: 0.5rem;">
+                        <button type="submit" id="profile-save-btn">Save Profile</button>
+                        <button type="button" class="btn" id="profile-reset-btn">Reset</button>
+                    </div>
+                </form>
+                <div id="profile-status" class="status-msg"></div>
+            </div>
+            <div class="panel">
+                <h2>Standard Triples</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    Selected triples are imported automatically after Wikidata grounding. WorldCat and DBpedia URIs are inferred from Wikidata when available.
+                </p>
+                <div id="standard-triples-settings" class="standard-triples-grid"></div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-primary" id="standard-triples-save-btn">Save Standard Triples</button>
+                    <button type="button" class="btn" id="standard-triples-reset-btn">Reload</button>
+                </div>
+                <div id="standard-triples-status" class="status-msg"></div>
+            </div>
+            <div class="panel">
+                <h2>Pipeline Settings</h2>
+                <form id="pipeline-settings-form" class="pipeline-settings-form">
+                    <label>
+                        <span>spaCy model</span>
+                        <input type="text" id="pipeline-spacy-model" placeholder="en_core_web_sm">
+                    </label>
+                    <label>
+                        <span>Fuzzy dedupe threshold</span>
+                        <input type="number" id="pipeline-fuzzy-threshold" min="0" max="100">
+                    </label>
+                    <label>
+                        <span>Grounding candidates</span>
+                        <input type="number" id="pipeline-grounding-limit" min="1" max="25">
+                    </label>
+                    <label>
+                        <span>Request timeout (sec)</span>
+                        <input type="number" id="pipeline-timeout" min="5" max="120">
+                    </label>
+                    <label class="type-checkbox">
+                        <input type="checkbox" id="pipeline-coreference-enabled">
+                        <span>Run coreference after upload</span>
+                    </label>
+                    <label class="type-checkbox">
+                        <input type="checkbox" id="pipeline-wikidata-type-filter">
+                        <span>Use Wikidata type re-ranking</span>
+                    </label>
+                    <div class="pipeline-settings-actions">
+                        <button type="submit" class="btn btn-primary">Save Pipeline Settings</button>
+                        <button type="button" class="btn" id="pipeline-settings-reload-btn">Reload</button>
+                    </div>
+                </form>
+                <div id="pipeline-runtime-status" class="pipeline-runtime-status"></div>
+                <div id="pipeline-settings-status" class="status-msg"></div>
+            </div>
+        </section>
+
+        <!-- Document View -->
+        <section id="view-document-view" class="view hidden">
+            <div class="panel document-view-panel">
+                <div class="document-view-header">
+                    <h2>Document View</h2>
+                    <select id="document-view-select">
+                        <option value="">Select a document</option>
+                    </select>
+                </div>
+                <div id="document-view-status" class="status-msg"></div>
+                <div id="document-rendered-text" class="document-rendered-text"></div>
+            </div>
+            <div id="document-entity-focus" class="panel hidden">
+                <h2 id="document-entity-focus-title">Entity Detail</h2>
+                <div id="document-entity-focus-content"></div>
+            </div>
+        </section>
+
         <!-- Documents View -->
-        <section id="view-documents" class="view active">
+        <section id="view-documents" class="view hidden">
             <div class="panel">
                 <h2>Upload Document</h2>
                 <form id="upload-form">
-                    <input type="file" id="file-input" accept=".txt,.md,.pdf,.json" required>
-                    <label for="upload-profile-select" style="font-size: 0.85rem; color: var(--text-muted);">Profile:</label>
-                    <select id="upload-profile-select"></select>
+                    <input type="file" id="file-input" accept=".txt,.md,.pdf,.json" multiple required>
+                    <span id="upload-profile-label" class="settings-summary"></span>
                     <button type="submit" id="upload-btn">Upload &amp; Process</button>
                 </form>
                 <div id="upload-status" class="status-msg"></div>
+                <div id="upload-queue" class="upload-queue"></div>
             </div>
             <div class="panel">
                 <h2>Documents</h2>
@@ -59,11 +177,17 @@
                         <option value="NORP">NORP</option>
                         <option value="FAC">FAC</option>
                         <option value="PRODUCT">PRODUCT</option>
+                        <option value="MISC">MISC</option>
                     </select>
                     <select id="entity-grounded-filter">
                         <option value="">All</option>
                         <option value="yes">Grounded</option>
                         <option value="no">Ungrounded</option>
+                    </select>
+                    <select id="entity-ontology-filter">
+                        <option value="">All ontology links</option>
+                        <option value="yes">Linked to ontology</option>
+                        <option value="no">Not linked to ontology</option>
                     </select>
                     <select id="entity-document-filter" title="Filter to entities mentioned in a specific document">
                         <option value="">All documents</option>
@@ -109,6 +233,7 @@
                         <option value="PRODUCT">PRODUCT</option>
                         <option value="LAW">LAW</option>
                         <option value="LANGUAGE">LANGUAGE</option>
+                        <option value="MISC">MISC</option>
                     </select>
                     <select id="mapping-ontology-class"></select>
                     <button type="submit">Add Mapping</button>
@@ -116,47 +241,19 @@
             </div>
         </section>
 
-        <!-- Profiles View -->
-        <section id="view-profiles" class="view hidden">
-            <div class="panel">
-                <h2>Extraction Profiles</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                    A profile restricts which NER entity types are kept when a document is uploaded. Use this to focus extraction on (e.g.) People + Organizations only.
-                </p>
-                <div id="profile-list" class="item-list"></div>
-            </div>
-            <div class="panel">
-                <h2 id="profile-form-title">New Profile</h2>
-                <form id="profile-form">
-                    <input type="hidden" id="profile-id">
-                    <input type="text" id="profile-name" placeholder="Profile name" required>
-                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">
-                        <input type="checkbox" id="profile-is-default"> Default
-                    </label>
-                    <div style="flex-basis: 100%;"></div>
-                    <div id="profile-types-grid" class="profile-types-grid"></div>
-                    <div style="flex-basis: 100%; display: flex; gap: 0.5rem;">
-                        <button type="submit" id="profile-save-btn">Save Profile</button>
-                        <button type="button" class="btn" id="profile-reset-btn">Reset</button>
-                    </div>
-                </form>
-                <div id="profile-status" class="status-msg"></div>
-            </div>
-        </section>
-
         <!-- Export View -->
         <section id="view-export" class="view hidden">
             <div class="panel">
-                <h2>Export Entity Database</h2>
-                <p>Download the full entity database in your preferred format.</p>
+                <h2>Export Profile Track</h2>
+                <p id="export-profile-summary">Download entities from the active profile.</p>
                 <div class="export-buttons">
-                    <button onclick="window.location='/api/export/json'" class="export-btn">
+                    <button onclick="downloadExport('json')" class="export-btn">
                         Download JSON
                     </button>
-                    <button onclick="window.location='/api/export/csv'" class="export-btn">
+                    <button onclick="downloadExport('csv')" class="export-btn">
                         Download CSV
                     </button>
-                    <button onclick="window.location='/api/export/rdf'" class="export-btn">
+                    <button onclick="downloadExport('rdf')" class="export-btn">
                         Download RDF/XML
                     </button>
                 </div>
@@ -172,13 +269,13 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
-    <script src="/static/js/documents.js"></script>
-    <script src="/static/js/entities.js"></script>
-    <script src="/static/js/ontology.js"></script>
-    <script src="/static/js/grounding.js"></script>
-    <script src="/static/js/enrichment.js"></script>
-    <script src="/static/js/export.js"></script>
-    <script src="/static/js/profiles.js"></script>
+    <script src="/static/js/app.js?v=20260512-feature-pass"></script>
+    <script src="/static/js/documents.js?v=20260513-anchored-focus"></script>
+    <script src="/static/js/entities.js?v=20260513-anchored-focus"></script>
+    <script src="/static/js/ontology.js?v=20260504-grounding"></script>
+    <script src="/static/js/grounding.js?v=20260504-grounding"></script>
+    <script src="/static/js/enrichment.js?v=20260512-docview-settings"></script>
+    <script src="/static/js/export.js?v=20260504-grounding"></script>
+    <script src="/static/js/profiles.js?v=20260512-feature-pass"></script>
 </body>
 </html>

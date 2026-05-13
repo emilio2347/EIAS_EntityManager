@@ -17,7 +17,7 @@ ONTOLOGY_DIR.mkdir(parents=True, exist_ok=True)
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # spaCy model
-SPACY_MODEL = os.getenv("SPACY_MODEL", "en_core_web_sm")
+SPACY_MODEL = os.getenv("SPACY_MODEL", "en_core_web_lg")
 
 # External API endpoints
 WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php"

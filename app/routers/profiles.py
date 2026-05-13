@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import ExtractionProfile
+from app.models import Document, Entity, ExtractionProfile
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ router = APIRouter()
 ALL_NER_TYPES: list[str] = [
     "PERSON", "ORG", "GPE", "LOC", "WORK_OF_ART", "EVENT",
     "DATE", "NORP", "FAC", "PRODUCT", "LAW", "LANGUAGE",
-    "MONEY", "QUANTITY", "ORDINAL", "CARDINAL", "PERCENT", "TIME",
+    "MONEY", "QUANTITY", "ORDINAL", "CARDINAL", "PERCENT", "TIME", "MISC",
 ]
 
 
@@ -44,13 +44,24 @@ def _serialize(profile: ExtractionProfile) -> dict:
 
 def _ensure_seed_profiles(db: Session) -> None:
     """Create a default 'All Types' profile on first call if none exist."""
-    if db.query(ExtractionProfile).count() > 0:
-        return
-    db.add(ExtractionProfile(
-        name="All Types",
-        allowed_types=json.dumps(ALL_NER_TYPES),
-        is_default=True,
-    ))
+    profile = db.query(ExtractionProfile).filter(ExtractionProfile.is_default.is_(True)).first()
+    if profile is None:
+        profile = db.query(ExtractionProfile).order_by(ExtractionProfile.created_at).first()
+        if profile is None:
+            profile = ExtractionProfile(
+                name="All Types",
+                allowed_types=json.dumps(ALL_NER_TYPES),
+                is_default=True,
+            )
+            db.add(profile)
+            db.flush()
+        else:
+            profile.is_default = True
+
+    # Existing databases predate profile tracks. Keep old data visible by
+    # assigning unscoped documents/entities to the default track.
+    db.query(Document).filter(Document.profile_id.is_(None)).update({"profile_id": profile.id})
+    db.query(Entity).filter(Entity.profile_id.is_(None)).update({"profile_id": profile.id})
     db.commit()
 
 
@@ -156,6 +167,13 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Profile not found")
     if db.query(ExtractionProfile).count() <= 1:
         raise HTTPException(400, "Cannot delete the last remaining profile")
+    document_count = db.query(Document).filter(Document.profile_id == profile_id).count()
+    entity_count = db.query(Entity).filter(Entity.profile_id == profile_id).count()
+    if document_count or entity_count:
+        raise HTTPException(
+            400,
+            f"Cannot delete a profile with {document_count} documents and {entity_count} entities",
+        )
     db.delete(profile)
     db.commit()
     return {"status": "deleted"}

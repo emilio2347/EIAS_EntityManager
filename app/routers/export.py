@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -13,33 +13,40 @@ router = APIRouter()
 
 
 @router.get("/{fmt}")
-def download_export(fmt: str, db: Session = Depends(get_db)):
+def download_export(
+    fmt: str,
+    profile_id: str = Query("", description="Restrict export to one profile"),
+    db: Session = Depends(get_db),
+):
     """Download the entity database in the specified format.
 
     Supported formats: json, csv, rdf
     """
+    export_profile_id = profile_id or None
+    suffix = f"-{profile_id[:8]}" if profile_id else ""
+
     if fmt == "json":
-        content = export_json(db)
+        content = export_json(db, export_profile_id)
         return Response(
             content=content,
             media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=entities.json"},
+            headers={"Content-Disposition": f"attachment; filename=entities{suffix}.json"},
         )
 
     elif fmt == "csv":
-        content = export_csv(db)
+        content = export_csv(db, export_profile_id)
         return Response(
             content=content,
             media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=entities.csv"},
+            headers={"Content-Disposition": f"attachment; filename=entities{suffix}.csv"},
         )
 
     elif fmt == "rdf":
-        content = export_rdf_xml(db)
+        content = export_rdf_xml(db, export_profile_id)
         return Response(
             content=content,
             media_type="application/rdf+xml",
-            headers={"Content-Disposition": "attachment; filename=entities.rdf"},
+            headers={"Content-Disposition": f"attachment; filename=entities{suffix}.rdf"},
         )
 
     else:

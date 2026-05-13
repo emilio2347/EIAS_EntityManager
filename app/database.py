@@ -26,9 +26,14 @@ def get_db():
 # Columns to add to existing tables when missing.
 # Schema changes added after the initial release go here.
 _ADDITIONAL_COLUMNS: dict[str, list[tuple[str, str]]] = {
+    "documents": [
+        ("profile_id", "VARCHAR"),
+    ],
     "entities": [
+        ("profile_id", "VARCHAR"),
         ("alternative_labels", "TEXT NOT NULL DEFAULT '[]'"),
         ("ontology_individual_uri", "VARCHAR"),
+        ("image_url", "VARCHAR"),
     ],
 }
 

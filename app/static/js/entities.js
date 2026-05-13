@@ -3,6 +3,7 @@
    ======================================== */
 
 let _debounceTimer = null;
+const EIAS_ONTOLOGY_BASE = 'https://everythingisasign.com/ontology/eias-ontology#';
 
 // Wire up search/filter
 document.getElementById('entity-search')?.addEventListener('input', () => {
@@ -11,6 +12,7 @@ document.getElementById('entity-search')?.addEventListener('input', () => {
 });
 document.getElementById('entity-type-filter')?.addEventListener('change', loadEntities);
 document.getElementById('entity-grounded-filter')?.addEventListener('change', loadEntities);
+document.getElementById('entity-ontology-filter')?.addEventListener('change', loadEntities);
 document.getElementById('entity-document-filter')?.addEventListener('change', loadEntities);
 document.getElementById('entity-clear-all-btn')?.addEventListener('click', clearAllEntities);
 
@@ -22,7 +24,10 @@ async function clearAllEntities() {
     if (second !== 'DELETE') return;
 
     try {
-        const result = await api('/entities', { method: 'DELETE' });
+        const profileId = getActiveProfileId();
+        const params = new URLSearchParams();
+        if (profileId) params.set('profile_id', profileId);
+        const result = await api(`/entities?${params}`, { method: 'DELETE' });
         document.getElementById('entity-detail')?.classList.add('hidden');
         await loadEntities();
         alert(`Deleted ${result.deleted_count} entities.`);
@@ -39,13 +44,17 @@ async function loadEntities() {
     const q = document.getElementById('entity-search')?.value || '';
     const entityType = document.getElementById('entity-type-filter')?.value || '';
     const grounded = document.getElementById('entity-grounded-filter')?.value || '';
+    const ontologyLinked = document.getElementById('entity-ontology-filter')?.value || '';
     const documentId = document.getElementById('entity-document-filter')?.value || '';
+    const profileId = getActiveProfileId();
 
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (entityType) params.set('entity_type', entityType);
     if (grounded) params.set('grounded', grounded);
+    if (ontologyLinked) params.set('ontology_linked', ontologyLinked);
     if (documentId) params.set('document_id', documentId);
+    if (profileId) params.set('profile_id', profileId);
 
     try {
         const entities = await api(`/entities?${params}`);
@@ -60,7 +69,7 @@ async function loadEntities() {
                 ? ` · <span title="${escapeAttr((e.alternative_labels || []).join(', '))}">${altCount} alt label${altCount === 1 ? '' : 's'}</span>`
                 : '';
             return `
-                <div class="list-item" onclick="showEntityDetail('${e.id}')">
+                <div class="list-item" onclick="showEntityDetail('${e.id}', this)">
                     <div class="list-item-main">
                         <span class="list-item-title">
                             ${groundingDot(e)}
@@ -84,10 +93,11 @@ async function loadEntities() {
 }
 
 
-async function showEntityDetail(entityId) {
+async function showEntityDetail(entityId, anchorEl = null) {
     const detailEl = document.getElementById('entity-detail');
     const contentEl = document.getElementById('entity-detail-content');
     detailEl.classList.remove('hidden');
+    positionEntityFocusPreview(detailEl, anchorEl);
 
     contentEl.innerHTML = '<div class="spinner"></div> Loading...';
 
@@ -97,22 +107,23 @@ async function showEntityDetail(entityId) {
         document.getElementById('entity-detail-title').textContent = e.canonical_name;
 
         let groundingHtml = '';
-        if (e.wikidata_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">Wikidata</span><span class="detail-value"><a href="${e.wikidata_uri}" target="_blank">${e.wikidata_uri}</a></span></div>`;
-        if (e.dbpedia_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">DBpedia</span><span class="detail-value"><a href="${e.dbpedia_uri}" target="_blank">${e.dbpedia_uri}</a></span></div>`;
-        if (e.worldcat_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">WorldCat</span><span class="detail-value"><a href="${e.worldcat_uri}" target="_blank">${e.worldcat_uri}</a></span></div>`;
+        if (e.wikidata_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">Wikidata</span><span class="detail-value"><a href="${escapeAttr(e.wikidata_uri)}" target="_blank">${escapeHtml(e.wikidata_uri)}</a></span></div>`;
+        if (e.dbpedia_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">DBpedia</span><span class="detail-value"><a href="${escapeAttr(e.dbpedia_uri)}" target="_blank">${escapeHtml(e.dbpedia_uri)}</a></span></div>`;
+        if (e.worldcat_uri) groundingHtml += `<div class="detail-row"><span class="detail-label">WorldCat</span><span class="detail-value"><a href="${escapeAttr(e.worldcat_uri)}" target="_blank">${escapeHtml(e.worldcat_uri)}</a></span></div>`;
 
         if (!groundingHtml) groundingHtml = '<p style="color: var(--text-muted);">Not grounded yet. <a href="#" onclick="event.preventDefault(); openGroundingModal(\'' + entityId + '\')">Search now</a></p>';
 
         const enrichmentHtml = e.enrichment.length > 0
-            ? `<table><thead><tr><th>Property</th><th>Value</th><th>Source</th></tr></thead><tbody>
-                ${e.enrichment.map(ep => `<tr><td>${escapeHtml(ep.property_name)}</td><td>${escapeHtml(ep.value)}</td><td>${ep.source}</td></tr>`).join('')}
+            ? `<table class="enrichment-table"><thead><tr><th>Property</th><th>Value</th><th>Source</th><th></th></tr></thead><tbody>
+                ${e.enrichment.map(ep => `<tr class="enrichment-row"><td>${escapeHtml(ep.property_name)}</td><td>${escapeHtml(ep.value)}</td><td>${escapeHtml(ep.source)}</td><td class="enrichment-actions"><button class="btn btn-danger btn-sm enrichment-delete-btn" onclick="deleteEnrichmentProperty('${entityId}', '${ep.id}')">Delete</button></td></tr>`).join('')}
                </tbody></table>`
             : '<p style="color: var(--text-muted);">No enrichment data.</p>';
 
+        const isGrounded = e.wikidata_uri || e.dbpedia_uri || e.worldcat_uri;
         const canEnrich = e.wikidata_uri || e.dbpedia_uri;
 
         const altLabels = e.alternative_labels || [];
-        const altLabelsHtml = altLabels.length
+        const altLabelChips = altLabels.length
             ? altLabels.map(lab => `
                 <span class="alt-label">
                     ${escapeHtml(lab)}
@@ -120,20 +131,31 @@ async function showEntityDetail(entityId) {
                     <button class="alt-label-action" title="Remove alternative label" onclick="removeAltLabel('${entityId}', '${escapeAttr(lab)}')">×</button>
                 </span>
             `).join(' ')
-            : '<span style="color: var(--text-muted);">None — merge another entity to add alternatives.</span>';
+            : '<span style="color: var(--text-muted);">None</span>';
+        const altLabelsHtml = `
+            <span class="alt-labels-control">
+                <span>${altLabelChips}</span>
+                <button class="btn btn-sm" onclick="openAltLabelsModal('${entityId}')">Edit/Add</button>
+            </span>
+        `;
 
         const ontologyClassHtml = e.ontology_class_uri
-            ? `<a href="${escapeAttr(e.ontology_class_uri)}" target="_blank">${escapeHtml(e.ontology_class_uri)}</a>`
+            ? `<a href="${escapeAttr(e.ontology_class_uri)}" target="_blank" title="${escapeAttr(e.ontology_class_uri)}">${escapeHtml(formatEiasUri(e.ontology_class_uri))}</a>`
             : '<em>unmapped</em>';
 
         const individualHtml = e.ontology_individual_uri
-            ? `<a href="${escapeAttr(e.ontology_individual_uri)}" target="_blank">${escapeHtml(e.ontology_individual_uri)}</a>
+            ? `<a href="${escapeAttr(e.ontology_individual_uri)}" target="_blank" title="${escapeAttr(e.ontology_individual_uri)}">${escapeHtml(formatEiasUri(e.ontology_individual_uri))}</a>
                <button class="btn btn-sm" style="margin-left: 0.5rem;" onclick="openIndividualModal('${entityId}')">Change</button>
                <button class="btn btn-sm" style="margin-left: 0.25rem;" onclick="clearIndividualLink('${entityId}')">Clear</button>`
             : `<em>not linked</em>
                <button class="btn btn-sm" style="margin-left: 0.5rem;" onclick="openIndividualModal('${entityId}')">Link…</button>`;
 
+        const previewHtml = e.image_url
+            ? `<div class="entity-preview"><img src="${escapeAttr(e.image_url)}" alt="${escapeAttr(e.canonical_name)}"></div>`
+            : '';
+
         contentEl.innerHTML = `
+            ${previewHtml}
             <div class="detail-section">
                 <h3>Info</h3>
                 <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${entityTypeTag(e.entity_type, e.id)}</span></div>
@@ -149,8 +171,9 @@ async function showEntityDetail(entityId) {
             <div class="detail-section">
                 <h3>Grounding</h3>
                 ${groundingHtml}
-                <div style="margin-top: 0.5rem;">
-                    <button class="btn btn-sm" onclick="openGroundingModal('${entityId}')">Search Grounding</button>
+                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-sm" onclick="openGroundingModal('${entityId}')">${isGrounded ? 'Change Grounding' : 'Search Grounding'}</button>
+                    ${isGrounded ? `<button class="btn btn-sm btn-danger" onclick="clearGrounding('${entityId}')">Remove Grounding</button>` : ''}
                 </div>
             </div>
             <div class="detail-section">
@@ -161,13 +184,14 @@ async function showEntityDetail(entityId) {
             <div class="detail-section">
                 <h3>Mentions (${e.mentions.length})</h3>
                 <table>
-                    <thead><tr><th>Surface Form</th><th>Document</th><th>Position</th></tr></thead>
+                    <thead><tr><th>Surface Form</th><th>Document</th><th>Position</th><th>Context</th></tr></thead>
                     <tbody>
                         ${e.mentions.slice(0, 30).map(m => `
                             <tr>
                                 <td>${escapeHtml(m.surface_form)}</td>
-                                <td>${m.document_id.substring(0, 8)}...</td>
+                                <td>${escapeHtml(m.document_filename || m.document_id.substring(0, 8) + '...')}</td>
                                 <td>${m.start_char}–${m.end_char}</td>
+                                <td class="mention-context">${escapeHtml(m.context_snippet || m.sentence || '')}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -191,6 +215,27 @@ async function showEntityDetail(entityId) {
 }
 
 
+function positionEntityFocusPreview(detailEl, anchorEl) {
+    if (!detailEl || !anchorEl) return;
+    detailEl.classList.add('anchored-focus-panel');
+    const container = document.getElementById('view-entities');
+    const containerRect = container?.getBoundingClientRect();
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const anchorTop = anchorRect.top + window.scrollY;
+    if (containerRect && window.matchMedia('(min-width: 900px)').matches) {
+        const containerTop = containerRect.top + window.scrollY;
+        detailEl.style.alignSelf = 'start';
+        detailEl.style.marginTop = `${Math.max(0, anchorTop - containerTop)}px`;
+        return;
+    }
+    detailEl.style.alignSelf = '';
+    detailEl.style.marginTop = '1rem';
+    window.requestAnimationFrame(() => {
+        detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+}
+
+
 async function deleteEntity(entityId) {
     if (!confirm('Delete this entity and all its mentions?')) return;
     try {
@@ -203,9 +248,74 @@ async function deleteEntity(entityId) {
 }
 
 
+async function deleteEnrichmentProperty(entityId, propertyId) {
+    if (!confirm('Delete this enrichment triple?')) return;
+    try {
+        await api(`/enrichment/${entityId}/properties/${propertyId}`, { method: 'DELETE' });
+        showEntityDetail(entityId);
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+
 /* ----------------------------------------------------------------------
    Alt-labels
    ---------------------------------------------------------------------- */
+
+function formatEiasUri(uri) {
+    if (!uri) return '';
+    if (!uri.startsWith(EIAS_ONTOLOGY_BASE)) return uri;
+    const fragment = uri.slice(EIAS_ONTOLOGY_BASE.length);
+    return `EIAS:${fragment.replace(/[_\s]+/g, '')}`;
+}
+
+
+async function openAltLabelsModal(entityId) {
+    let entity;
+    try {
+        entity = await api(`/entities/${entityId}`);
+    } catch (err) {
+        alert('Error: ' + err.message);
+        return;
+    }
+
+    const labels = entity.alternative_labels || [];
+    const html = `
+        <h2 style="margin-bottom: 1rem;">Alternative Labels</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            Add synonyms, spelling variants, abbreviations, or prior names for ${escapeHtml(entity.canonical_name)}.
+        </p>
+        <textarea id="alt-labels-input" class="alt-labels-input" placeholder="One label per line">${escapeHtml(labels.join('\n'))}</textarea>
+        <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+            <button class="btn btn-primary" onclick="saveAltLabels('${entityId}')">Save Labels</button>
+            <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    `;
+    openModal(html);
+    document.getElementById('alt-labels-input')?.focus();
+}
+
+
+async function saveAltLabels(entityId) {
+    const raw = document.getElementById('alt-labels-input')?.value || '';
+    const labels = raw
+        .split(/[\n;,]/)
+        .map(label => label.trim())
+        .filter(Boolean);
+
+    try {
+        await api(`/entities/${entityId}/altlabels`, {
+            method: 'PATCH',
+            body: JSON.stringify({ labels }),
+        });
+        closeModal();
+        loadEntities();
+        showEntityDetail(entityId);
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
 
 async function setPreferredLabel(entityId, label) {
     try {
@@ -282,6 +392,8 @@ async function searchMergeTargets() {
     try {
         const params = new URLSearchParams();
         if (q) params.set('q', q);
+        const profileId = getActiveProfileId();
+        if (profileId) params.set('profile_id', profileId);
         const all = await api(`/entities?${params}`);
         const candidates = all.filter(e => e.id !== _mergeSourceId).slice(0, 50);
 

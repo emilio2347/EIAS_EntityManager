@@ -41,12 +41,34 @@ def _store_alt_labels(entity: Entity, labels: list[str]) -> None:
     entity.alternative_labels = json.dumps(cleaned, ensure_ascii=False)
 
 
+def _mention_context_snippet(mention: Mention, radius: int = 80) -> str:
+    """Return document context around a mention with the surface form bracketed."""
+    text = mention.document.content_text if mention.document else ""
+    if not text:
+        return mention.sentence or mention.surface_form
+
+    start = max(0, mention.start_char - radius)
+    end = min(len(text), mention.end_char + radius)
+    prefix = text[start:mention.start_char].replace("\n", " ").strip()
+    suffix = text[mention.end_char:end].replace("\n", " ").strip()
+    surface = text[mention.start_char:mention.end_char] or mention.surface_form
+
+    snippet = f"{prefix} [{surface}] {suffix}".strip()
+    if start > 0:
+        snippet = f"... {snippet}"
+    if end < len(text):
+        snippet = f"{snippet} ..."
+    return " ".join(snippet.split())
+
+
 @router.get("")
 def list_entities(
     q: str = Query("", description="Search by name"),
     entity_type: str = Query("", description="Filter by type"),
     grounded: str = Query("", description="Filter: 'yes', 'no', or ''"),
+    ontology_linked: str = Query("", description="Filter ontology individual link: 'yes', 'no', or ''"),
     document_id: str = Query("", description="Restrict to entities mentioned in this document"),
+    profile_id: str = Query("", description="Restrict to entities in a profile"),
     db: Session = Depends(get_db),
 ):
     """List/search entities."""
@@ -56,6 +78,8 @@ def list_entities(
         query = query.filter(Entity.canonical_name.ilike(f"%{q}%"))
     if entity_type:
         query = query.filter(Entity.entity_type == entity_type)
+    if profile_id:
+        query = query.filter(Entity.profile_id == profile_id)
     if grounded == "yes":
         query = query.filter(
             (Entity.wikidata_uri.isnot(None))
@@ -68,6 +92,10 @@ def list_entities(
             Entity.dbpedia_uri.is_(None),
             Entity.worldcat_uri.is_(None),
         )
+    if ontology_linked == "yes":
+        query = query.filter(Entity.ontology_individual_uri.isnot(None))
+    elif ontology_linked == "no":
+        query = query.filter(Entity.ontology_individual_uri.is_(None))
     if document_id:
         query = query.join(Mention, Mention.entity_id == Entity.id).filter(
             Mention.document_id == document_id
@@ -85,6 +113,7 @@ def list_entities(
     return [
         {
             "id": e.id,
+            "profile_id": e.profile_id,
             "canonical_name": e.canonical_name,
             "entity_type": e.entity_type,
             "alternative_labels": _load_alt_labels(e),
@@ -93,6 +122,7 @@ def list_entities(
             "wikidata_uri": e.wikidata_uri,
             "dbpedia_uri": e.dbpedia_uri,
             "worldcat_uri": e.worldcat_uri,
+            "image_url": e.image_url,
             "mention_count": _mention_count(e.id),
             "created_at": e.created_at.isoformat() if e.created_at else None,
         }
@@ -136,6 +166,7 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
 
     return {
         "id": entity.id,
+        "profile_id": entity.profile_id,
         "canonical_name": entity.canonical_name,
         "entity_type": entity.entity_type,
         "alternative_labels": _load_alt_labels(entity),
@@ -144,15 +175,18 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
         "wikidata_uri": entity.wikidata_uri,
         "dbpedia_uri": entity.dbpedia_uri,
         "worldcat_uri": entity.worldcat_uri,
+        "image_url": entity.image_url,
         "created_at": entity.created_at.isoformat() if entity.created_at else None,
         "mentions": [
             {
                 "id": m.id,
                 "document_id": m.document_id,
+                "document_filename": m.document.filename if m.document else "",
                 "surface_form": m.surface_form,
                 "start_char": m.start_char,
                 "end_char": m.end_char,
                 "sentence": m.sentence,
+                "context_snippet": _mention_context_snippet(m),
             }
             for m in mentions
         ],
@@ -228,6 +262,8 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
         raise HTTPException(404, "Source entity not found")
     if not target:
         raise HTTPException(404, "Target entity not found")
+    if source.profile_id != target.profile_id:
+        raise HTTPException(400, "Cannot merge entities from different profiles")
 
     # Merge alternative labels: target keeps its preferred name; source name + its
     # alt labels become alt labels on target.
@@ -366,13 +402,19 @@ def set_individual(entity_id: str, body: IndividualRequest, db: Session = Depend
 
 
 @router.delete("")
-def delete_all_entities(db: Session = Depends(get_db)):
+def delete_all_entities(
+    profile_id: str = Query("", description="Restrict deletion to one profile"),
+    db: Session = Depends(get_db),
+):
     """Delete every entity (and all dependent mentions, coref chains, enrichment).
 
     The cascade is handled per-entity via SQLAlchemy relationships rather than
     a bulk DELETE so that the cascade configured on Entity is honored.
     """
-    entities = db.query(Entity).all()
+    query = db.query(Entity)
+    if profile_id:
+        query = query.filter(Entity.profile_id == profile_id)
+    entities = query.all()
     count = len(entities)
     for ent in entities:
         db.delete(ent)

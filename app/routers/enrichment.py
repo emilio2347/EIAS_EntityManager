@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Entity
+from app.models import Entity, EnrichmentProperty
 from app.services.enrichment import get_available_properties, import_properties
 
 router = APIRouter()
@@ -54,3 +54,26 @@ async def import_enrichment(
         "imported_count": len(imported),
         "imported": imported,
     }
+
+
+@router.delete("/{entity_id}/properties/{property_id}")
+def delete_enrichment_property(
+    entity_id: str,
+    property_id: str,
+    db: Session = Depends(get_db),
+):
+    """Delete one imported enrichment property for an entity."""
+    prop = (
+        db.query(EnrichmentProperty)
+        .filter(
+            EnrichmentProperty.id == property_id,
+            EnrichmentProperty.entity_id == entity_id,
+        )
+        .first()
+    )
+    if not prop:
+        raise HTTPException(404, "Enrichment property not found")
+
+    db.delete(prop)
+    db.commit()
+    return {"status": "deleted", "property_id": property_id}

@@ -4,4 +4,9 @@
 
 // Export functionality is handled directly via the download buttons
 // in index.html using window.location to trigger file downloads.
-// This file is reserved for any future enhancements (e.g., filtered exports).
+function downloadExport(fmt) {
+    const params = new URLSearchParams();
+    const profileId = getActiveProfileId();
+    if (profileId) params.set('profile_id', profileId);
+    window.location = `/api/export/${fmt}?${params}`;
+}

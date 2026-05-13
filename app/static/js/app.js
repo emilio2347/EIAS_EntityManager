@@ -6,8 +6,32 @@
 const ENTITY_TYPES = [
     'PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT',
     'DATE', 'NORP', 'FAC', 'PRODUCT', 'LAW', 'LANGUAGE',
-    'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', 'PERCENT', 'TIME',
+    'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', 'PERCENT', 'TIME', 'MISC',
 ];
+
+let _activeProfile = null;
+
+function applyUiTheme(theme) {
+    const liquidGlassEnabled = theme === 'liquid-glass';
+    document.body.classList.toggle('theme-liquid-glass', liquidGlassEnabled);
+    document.documentElement.classList.toggle('theme-boot-liquid-glass', liquidGlassEnabled);
+
+    const select = document.getElementById('settings-ui-theme-select');
+    if (select) {
+        select.value = liquidGlassEnabled ? 'liquid-glass' : 'classic';
+    }
+}
+
+function initializeUiTheme() {
+    const storedTheme = localStorage.getItem('eias.uiTheme') || 'liquid-glass';
+    applyUiTheme(storedTheme);
+
+    document.getElementById('settings-ui-theme-select')?.addEventListener('change', (event) => {
+        const nextTheme = event.target.value === 'classic' ? 'classic' : 'liquid-glass';
+        localStorage.setItem('eias.uiTheme', nextTheme);
+        applyUiTheme(nextTheme);
+    });
+}
 
 // Navigation
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -28,14 +52,18 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
         // Trigger refresh on view activation
         if (viewName === 'documents') {
             loadDocuments();
-            loadProfilesIntoUploadSelect();
+            updateActiveProfileLabels();
+        }
+        if (viewName === 'document-view') {
+            loadDocumentViewOptions();
         }
         if (viewName === 'entities') {
             loadDocumentFilterOptions();
             loadEntities();
         }
         if (viewName === 'ontology') loadOntologyData();
-        if (viewName === 'profiles') loadProfilesView();
+        if (viewName === 'settings') loadSettingsView();
+        if (viewName === 'export') updateExportProfileSummary();
     });
 });
 
@@ -141,6 +169,35 @@ function groundingDot(entity) {
     return `<span class="grounding-dot ${grounded ? 'grounded' : 'ungrounded'}" title="${grounded ? 'Grounded' : 'Ungrounded'}"></span>`;
 }
 
+function getActiveProfileId() {
+    const select = document.getElementById('settings-active-profile-select');
+    return select?.value || _activeProfile?.id || localStorage.getItem('eias.activeProfileId') || '';
+}
+
+function getActiveProfileName() {
+    const select = document.getElementById('settings-active-profile-select');
+    if (select && select.selectedOptions.length) {
+        return select.selectedOptions[0].textContent.replace(' (default)', '');
+    }
+    return _activeProfile?.name || 'No profile';
+}
+
+function updateActiveProfileLabels() {
+    const label = getActiveProfileName();
+    const uploadLabel = document.getElementById('upload-profile-label');
+    if (uploadLabel) uploadLabel.textContent = `Profile: ${label}`;
+
+    const summary = document.getElementById('active-profile-summary');
+    if (summary) summary.textContent = label ? `Current track: ${label}` : '';
+
+    updateExportProfileSummary();
+}
+
+function updateExportProfileSummary() {
+    const el = document.getElementById('export-profile-summary');
+    if (el) el.textContent = `Download entities from the active profile: ${getActiveProfileName()}.`;
+}
+
 function showStatus(elementId, message, type = '') {
     const el = document.getElementById(elementId);
     if (el) {
@@ -166,6 +223,6 @@ document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    loadDocuments();
-    loadProfilesIntoUploadSelect();
+    initializeUiTheme();
+    loadSettingsView();
 });

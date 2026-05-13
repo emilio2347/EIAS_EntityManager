@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models import CoreferenceChain, CoreferenceMember, Entity, Mention
 from app.services.ner import get_nlp
+from app.services.app_settings import get_pipeline_settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,12 @@ def resolve_coreferences(
     Should be called after NER has already been run on the same document.
     Returns a list of chain dicts.
     """
-    nlp = get_nlp()
+    settings = get_pipeline_settings(db)
+    if not settings.coreference_enabled:
+        logger.info("coreference disabled in pipeline settings")
+        return []
+
+    nlp = get_nlp(settings.spacy_model, settings.coreference_enabled)
     doc = nlp(text)
 
     # Check if coreferee is available
@@ -34,6 +40,11 @@ def resolve_coreferences(
     coref_chains = doc._.coref_chains
     if coref_chains is None:
         return []
+
+    # Keep this idempotent if coreference is re-run for an existing document.
+    for existing in db.query(CoreferenceChain).filter(CoreferenceChain.document_id == document_id).all():
+        db.delete(existing)
+    db.flush()
 
     results: list[dict[str, Any]] = []
 

@@ -28,9 +28,12 @@ def _decode_alt_labels(raw: str | None) -> list[str]:
     return []
 
 
-def export_json(db: Session) -> str:
+def export_json(db: Session, profile_id: str | None = None) -> str:
     """Export all entities as nested JSON."""
-    entities = db.query(Entity).all()
+    query = db.query(Entity)
+    if profile_id:
+        query = query.filter(Entity.profile_id == profile_id)
+    entities = query.all()
     data: list[dict[str, Any]] = []
 
     for ent in entities:
@@ -41,6 +44,7 @@ def export_json(db: Session) -> str:
 
         data.append({
             "id": ent.id,
+            "profile_id": ent.profile_id,
             "canonical_name": ent.canonical_name,
             "alternative_labels": _decode_alt_labels(ent.alternative_labels),
             "entity_type": ent.entity_type,
@@ -74,15 +78,19 @@ def export_json(db: Session) -> str:
     return json.dumps(data, indent=2, ensure_ascii=False)
 
 
-def export_csv(db: Session) -> str:
+def export_csv(db: Session, profile_id: str | None = None) -> str:
     """Export all entities as a flat CSV table."""
-    entities = db.query(Entity).all()
+    query = db.query(Entity)
+    if profile_id:
+        query = query.filter(Entity.profile_id == profile_id)
+    entities = query.all()
     output = io.StringIO()
     writer = csv.writer(output)
 
     # Header
     writer.writerow([
         "id",
+        "profile_id",
         "canonical_name",
         "alternative_labels",
         "entity_type",
@@ -104,6 +112,7 @@ def export_csv(db: Session) -> str:
 
         writer.writerow([
             ent.id,
+            ent.profile_id or "",
             ent.canonical_name,
             "; ".join(_decode_alt_labels(ent.alternative_labels)),
             ent.entity_type,
@@ -120,7 +129,7 @@ def export_csv(db: Session) -> str:
     return output.getvalue()
 
 
-def export_rdf_xml(db: Session) -> str:
+def export_rdf_xml(db: Session, profile_id: str | None = None) -> str:
     """Export all entities as RDF/XML using the loaded ontology."""
     EIAS = Namespace("http://eias.org/entity/")
     EIAS_PROP = Namespace("http://eias.org/property/")
@@ -138,7 +147,10 @@ def export_rdf_xml(db: Session) -> str:
             if prefix:
                 g.bind(prefix, ns)
 
-    entities = db.query(Entity).all()
+    query = db.query(Entity)
+    if profile_id:
+        query = query.filter(Entity.profile_id == profile_id)
+    entities = query.all()
 
     for ent in entities:
         subj = EIAS[ent.id]
@@ -151,6 +163,8 @@ def export_rdf_xml(db: Session) -> str:
         g.add((subj, RDFS.label, Literal(ent.canonical_name)))
         g.add((subj, SKOS.prefLabel, Literal(ent.canonical_name)))
         g.add((subj, EIAS_PROP["entityType"], Literal(ent.entity_type)))
+        if ent.profile_id:
+            g.add((subj, EIAS_PROP["profileID"], Literal(ent.profile_id)))
 
         # Alternative labels
         for alt in _decode_alt_labels(ent.alternative_labels):

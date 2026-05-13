@@ -25,6 +25,7 @@ class Document(Base):
     __tablename__ = "documents"
 
     id = Column(String, primary_key=True, default=_uuid)
+    profile_id = Column(String, ForeignKey("extraction_profiles.id"), nullable=True, index=True)
     filename = Column(String, nullable=False)
     filetype = Column(String, nullable=False)  # txt, md, pdf, json
     content_text = Column(Text, nullable=False)
@@ -42,6 +43,7 @@ class Entity(Base):
     __tablename__ = "entities"
 
     id = Column(String, primary_key=True, default=_uuid)
+    profile_id = Column(String, ForeignKey("extraction_profiles.id"), nullable=True, index=True)
     canonical_name = Column(String, nullable=False, index=True)
     entity_type = Column(String, nullable=False)  # spaCy label: PERSON, ORG, etc.
     alternative_labels = Column(Text, nullable=False, default="[]")  # JSON list of strings
@@ -50,6 +52,7 @@ class Entity(Base):
     wikidata_uri = Column(String, nullable=True)
     dbpedia_uri = Column(String, nullable=True)
     worldcat_uri = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=_now)
 
     mentions = relationship("Mention", back_populates="entity", cascade="all, delete-orphan")
@@ -148,3 +151,14 @@ class ExtractionProfile(Base):
     allowed_types = Column(Text, nullable=False, default="[]")  # JSON list of NER labels
     is_default = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# App Settings  (small JSON-backed configuration values)
+# ---------------------------------------------------------------------------
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key = Column(String, primary_key=True)
+    value = Column(Text, nullable=False)

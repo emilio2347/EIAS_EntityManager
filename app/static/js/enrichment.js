@@ -3,7 +3,7 @@
    ======================================== */
 
 async function openEnrichmentModal(entityId) {
-    openModal('<div class="spinner"></div> Fetching available properties from Wikidata and DBpedia...');
+    openModal('<div class="spinner"></div> Fetching available properties...');
 
     try {
         const data = await api(`/enrichment/${entityId}/available`);

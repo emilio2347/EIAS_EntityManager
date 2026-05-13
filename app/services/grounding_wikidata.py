@@ -16,6 +16,8 @@ async def search_wikidata(
     query: str,
     entity_type: str | None = None,
     limit: int = 5,
+    timeout: int = 15,
+    type_filter_enabled: bool = True,
 ) -> list[dict[str, Any]]:
     """Search Wikidata for entity candidates.
 
@@ -31,7 +33,7 @@ async def search_wikidata(
         "type": "item",
     }
 
-    async with httpx.AsyncClient(timeout=15, headers=HTTP_HEADERS) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=HTTP_HEADERS) as client:
         resp = await client.get(WIKIDATA_API_URL, params=params)
         resp.raise_for_status()
         data = resp.json()
@@ -48,8 +50,8 @@ async def search_wikidata(
         })
 
     # If an entity_type filter is given, try to narrow via SPARQL
-    if entity_type and candidates:
-        candidates = await _filter_by_type(candidates, entity_type)
+    if type_filter_enabled and entity_type and candidates:
+        candidates = await _filter_by_type(candidates, entity_type, timeout=timeout)
 
     return candidates
 
@@ -57,6 +59,7 @@ async def search_wikidata(
 async def _filter_by_type(
     candidates: list[dict[str, Any]],
     entity_type: str,
+    timeout: int = 15,
 ) -> list[dict[str, Any]]:
     """Optionally re-rank candidates using SPARQL type queries.
 
@@ -88,7 +91,7 @@ async def _filter_by_type(
     """
 
     try:
-        async with httpx.AsyncClient(timeout=15, headers=HTTP_HEADERS) as client:
+        async with httpx.AsyncClient(timeout=timeout, headers=HTTP_HEADERS) as client:
             resp = await client.get(
                 WIKIDATA_SPARQL_URL,
                 params={"query": sparql, "format": "json"},
