@@ -9,36 +9,57 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Entity, Mention, EnrichmentProperty, CoreferenceChain, CoreferenceMember
+from app.models import (
+    Entity,
+    EntityMention,
+    EntityReconciliationEvent,
+    Mention,
+    EnrichmentProperty,
+    CoreferenceChain,
+    CoreferenceMember,
+    SpanAnnotation,
+    ensure_entity_aliases,
+)
 
 router = APIRouter()
+ALLOWED_REVIEW_STATUSES = {
+    "machine_generated",
+    "needs_review",
+    "accepted",
+    "rejected",
+    "manually_created",
+    "superseded",
+}
+
+
+def _clean_review_status(value: str) -> str:
+    status = (value or "").strip().lower()
+    if status not in ALLOWED_REVIEW_STATUSES:
+        raise HTTPException(400, f"review_status must be one of: {', '.join(sorted(ALLOWED_REVIEW_STATUSES))}")
+    return status
 
 
 def _load_alt_labels(entity: Entity) -> list[str]:
     """Decode the alternative_labels JSON column into a clean list."""
-    raw = entity.alternative_labels or "[]"
-    try:
-        data = json.loads(raw)
-        if isinstance(data, list):
-            return [str(x) for x in data if x]
-    except (ValueError, TypeError):
-        pass
-    return []
+    return [alias.alias for alias in entity.aliases if alias.alias]
 
 
 def _store_alt_labels(entity: Entity, labels: list[str]) -> None:
     """Encode a list of alt-labels back into the entity, deduped and clean."""
-    seen: set[str] = set()
-    cleaned: list[str] = []
-    for lab in labels:
-        if not lab:
-            continue
-        s = str(lab).strip()
-        if not s or s == entity.canonical_name or s in seen:
-            continue
-        seen.add(s)
-        cleaned.append(s)
-    entity.alternative_labels = json.dumps(cleaned, ensure_ascii=False)
+    ensure_entity_aliases(entity, labels)
+
+
+def _mention_sentence(mention: Mention) -> str | None:
+    raw = mention.sentence
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            return data.get("sentence")
+    except (ValueError, TypeError):
+        pass
+    return raw
 
 
 def _mention_context_snippet(mention: Mention, radius: int = 80) -> str:
@@ -61,14 +82,26 @@ def _mention_context_snippet(mention: Mention, radius: int = 80) -> str:
     return " ".join(snippet.split())
 
 
+def _group_mentions_by_article(mentions: list[Mention]) -> dict[str, list[Mention]]:
+    grouped: dict[str, list[Mention]] = {}
+    for mention in mentions:
+        article_id = mention.document_id
+        grouped.setdefault(article_id, []).append(mention)
+    return grouped
+
+
 @router.get("")
 def list_entities(
     q: str = Query("", description="Search by name"),
     entity_type: str = Query("", description="Filter by type"),
-    grounded: str = Query("", description="Filter: 'yes', 'no', or ''"),
+    grounded: str = Query("", description="Legacy grounding filter: 'yes', 'no', or ''"),
+    grounding_status: str = Query("", description="Filter: 'grounded', 'ungrounded', or ''"),
     ontology_linked: str = Query("", description="Filter ontology individual link: 'yes', 'no', or ''"),
+    ontology_class_uri: str = Query("", description="Restrict to ontology class URI"),
+    article_id: str = Query("", description="Restrict to entities mentioned in this article"),
+    text_version_id: str = Query("", description="Restrict to entities mentioned in this text version"),
     document_id: str = Query("", description="Restrict to entities mentioned in this document"),
-    profile_id: str = Query("", description="Restrict to entities in a profile"),
+    profile_id: str = Query("", description="Deprecated; ignored"),
     db: Session = Depends(get_db),
 ):
     """List/search entities."""
@@ -78,36 +111,45 @@ def list_entities(
         query = query.filter(Entity.canonical_name.ilike(f"%{q}%"))
     if entity_type:
         query = query.filter(Entity.entity_type == entity_type)
-    if profile_id:
-        query = query.filter(Entity.profile_id == profile_id)
-    if grounded == "yes":
+    resolved_grounding_status = grounding_status or ({"yes": "grounded", "no": "ungrounded"}.get(grounded, ""))
+    if resolved_grounding_status == "grounded":
         query = query.filter(
             (Entity.wikidata_uri.isnot(None))
             | (Entity.dbpedia_uri.isnot(None))
             | (Entity.worldcat_uri.isnot(None))
         )
-    elif grounded == "no":
+    elif resolved_grounding_status == "ungrounded":
         query = query.filter(
             Entity.wikidata_uri.is_(None),
             Entity.dbpedia_uri.is_(None),
             Entity.worldcat_uri.is_(None),
         )
+    if ontology_class_uri:
+        query = query.filter(Entity.ontology_class_uri == ontology_class_uri)
     if ontology_linked == "yes":
         query = query.filter(Entity.ontology_individual_uri.isnot(None))
     elif ontology_linked == "no":
         query = query.filter(Entity.ontology_individual_uri.is_(None))
-    if document_id:
+    corpus_article_id = article_id or document_id
+    if corpus_article_id:
         query = query.join(Mention, Mention.entity_id == Entity.id).filter(
-            Mention.document_id == document_id
+            Mention.document_id == corpus_article_id
         ).distinct()
+    if text_version_id:
+        query = (
+            query.join(EntityMention, EntityMention.entity_id == Entity.id)
+            .join(SpanAnnotation, SpanAnnotation.id == EntityMention.annotation_id)
+            .filter(SpanAnnotation.text_version_id == text_version_id)
+            .distinct()
+        )
 
     entities = query.order_by(Entity.canonical_name).all()
 
     # If filtering by document, count only mentions in that document; otherwise total.
     def _mention_count(entity_id: str) -> int:
         q_m = db.query(Mention).filter(Mention.entity_id == entity_id)
-        if document_id:
-            q_m = q_m.filter(Mention.document_id == document_id)
+        if corpus_article_id:
+            q_m = q_m.filter(Mention.document_id == corpus_article_id)
         return q_m.count()
 
     return [
@@ -123,6 +165,7 @@ def list_entities(
             "dbpedia_uri": e.dbpedia_uri,
             "worldcat_uri": e.worldcat_uri,
             "image_url": e.image_url,
+            "review_status": e.review_status,
             "mention_count": _mention_count(e.id),
             "created_at": e.created_at.isoformat() if e.created_at else None,
         }
@@ -169,6 +212,7 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
         "profile_id": entity.profile_id,
         "canonical_name": entity.canonical_name,
         "entity_type": entity.entity_type,
+        "review_status": entity.review_status,
         "alternative_labels": _load_alt_labels(entity),
         "ontology_class_uri": entity.ontology_class_uri,
         "ontology_individual_uri": entity.ontology_individual_uri,
@@ -180,15 +224,38 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
         "mentions": [
             {
                 "id": m.id,
+                "annotation_id": m.annotation_id,
                 "document_id": m.document_id,
                 "document_filename": m.document.filename if m.document else "",
+                "text_version_id": m.annotation.text_version_id if m.annotation else None,
                 "surface_form": m.surface_form,
                 "start_char": m.start_char,
                 "end_char": m.end_char,
-                "sentence": m.sentence,
+                "sentence": _mention_sentence(m),
                 "context_snippet": _mention_context_snippet(m),
+                "review_status": m.review_status,
             }
             for m in mentions
+        ],
+        "mention_contexts_by_article": [
+            {
+                "article_id": article_id,
+                "filename": group[0].document.filename if group[0].document else "",
+                "text_version_id": group[0].annotation.text_version_id if group[0].annotation else None,
+                "mention_count": len(group),
+                "mentions": [
+                    {
+                        "id": mention.id,
+                        "surface_form": mention.surface_form,
+                        "start_char": mention.start_char,
+                        "end_char": mention.end_char,
+                        "context_snippet": _mention_context_snippet(mention),
+                        "review_status": mention.review_status,
+                    }
+                    for mention in group
+                ],
+            }
+            for article_id, group in _group_mentions_by_article(mentions).items()
         ],
         "coreference_chains": chains_data,
         "enrichment": [
@@ -198,6 +265,7 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
                 "property_uri": ep.property_uri,
                 "value": ep.value,
                 "source": ep.source,
+                "review_status": ep.review_status,
                 "imported_at": ep.imported_at.isoformat() if ep.imported_at else None,
             }
             for ep in enrichments
@@ -207,6 +275,10 @@ def get_entity(entity_id: str, db: Session = Depends(get_db)):
 
 class UpdateTypeRequest(BaseModel):
     entity_type: str
+
+
+class ReviewStatusRequest(BaseModel):
+    review_status: str
 
 
 @router.patch("/{entity_id}/type")
@@ -240,6 +312,41 @@ def update_entity_type(entity_id: str, body: UpdateTypeRequest, db: Session = De
     }
 
 
+@router.patch("/{entity_id}/review-status")
+def update_entity_review_status(
+    entity_id: str,
+    body: ReviewStatusRequest,
+    db: Session = Depends(get_db),
+):
+    """Update curation review status for a canonical entity."""
+    entity = db.query(Entity).filter(Entity.id == entity_id).first()
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+    entity.review_status = _clean_review_status(body.review_status)
+    db.commit()
+    return {"status": "updated", "entity_id": entity.id, "review_status": entity.review_status}
+
+
+@router.patch("/{entity_id}/mentions/{mention_id}/review-status")
+def update_mention_review_status(
+    entity_id: str,
+    mention_id: str,
+    body: ReviewStatusRequest,
+    db: Session = Depends(get_db),
+):
+    """Update curation review status for one entity mention."""
+    mention = (
+        db.query(Mention)
+        .filter(Mention.id == mention_id, Mention.entity_id == entity_id)
+        .first()
+    )
+    if not mention:
+        raise HTTPException(404, "Mention not found")
+    mention.review_status = _clean_review_status(body.review_status)
+    db.commit()
+    return {"status": "updated", "mention_id": mention.id, "review_status": mention.review_status}
+
+
 class MergeRequest(BaseModel):
     target_entity_id: str
 
@@ -262,9 +369,6 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
         raise HTTPException(404, "Source entity not found")
     if not target:
         raise HTTPException(404, "Target entity not found")
-    if source.profile_id != target.profile_id:
-        raise HTTPException(400, "Cannot merge entities from different profiles")
-
     # Merge alternative labels: target keeps its preferred name; source name + its
     # alt labels become alt labels on target.
     target_alts = _load_alt_labels(target)
@@ -276,6 +380,7 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
     _store_alt_labels(target, merged_alts)
 
     # Transfer mentions
+    transferred_mentions = db.query(Mention).filter(Mention.entity_id == entity_id).count()
     db.query(Mention).filter(Mention.entity_id == entity_id).update(
         {"entity_id": body.target_entity_id}
     )
@@ -286,6 +391,7 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
     )
 
     # Transfer enrichment (skip duplicates)
+    transferred_enrichments = 0
     for ep in db.query(EnrichmentProperty).filter(EnrichmentProperty.entity_id == entity_id).all():
         existing = (
             db.query(EnrichmentProperty)
@@ -298,6 +404,7 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
         )
         if not existing:
             ep.entity_id = body.target_entity_id
+            transferred_enrichments += 1
         else:
             db.delete(ep)
 
@@ -311,12 +418,34 @@ def merge_entities(entity_id: str, body: MergeRequest, db: Session = Depends(get
     if not target.ontology_individual_uri and source.ontology_individual_uri:
         target.ontology_individual_uri = source.ontology_individual_uri
 
+    source_aliases = _load_alt_labels(source)
+    reconciliation_event = EntityReconciliationEvent(
+        source_entity_id=source.id,
+        target_entity_id=target.id,
+        action="merge",
+        actor="entity_manager",
+        transferred_mentions=transferred_mentions,
+        transferred_aliases=len([source.canonical_name, *source_aliases]),
+        transferred_enrichments=transferred_enrichments,
+        details_json=json.dumps(
+            {
+                "source_canonical_name": source.canonical_name,
+                "target_canonical_name": target.canonical_name,
+                "source_aliases": source_aliases,
+            },
+            ensure_ascii=False,
+        ),
+    )
+    db.add(reconciliation_event)
+    db.flush()
+    reconciliation_event.source_entity_id = None
     db.delete(source)
     db.commit()
 
     return {
         "status": "merged",
         "target_entity_id": body.target_entity_id,
+        "reconciliation_event_id": reconciliation_event.id,
         "alternative_labels": _load_alt_labels(target),
     }
 
@@ -403,7 +532,7 @@ def set_individual(entity_id: str, body: IndividualRequest, db: Session = Depend
 
 @router.delete("")
 def delete_all_entities(
-    profile_id: str = Query("", description="Restrict deletion to one profile"),
+    profile_id: str = Query("", description="Deprecated; ignored"),
     db: Session = Depends(get_db),
 ):
     """Delete every entity (and all dependent mentions, coref chains, enrichment).
@@ -412,8 +541,6 @@ def delete_all_entities(
     a bulk DELETE so that the cascade configured on Entity is honored.
     """
     query = db.query(Entity)
-    if profile_id:
-        query = query.filter(Entity.profile_id == profile_id)
     entities = query.all()
     count = len(entities)
     for ent in entities:

@@ -21,3 +21,4 @@ htmlcov/
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+data/text_versions/

@@ -10,7 +10,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AppSetting, Document, Entity, ExtractionProfile
+from app.models import (
+    AppSetting,
+    Entity,
+    EntityExtractionEntity,
+    ExtractionProfile,
+    ensure_entity_profile,
+)
 
 router = APIRouter()
 
@@ -105,6 +111,7 @@ def _serialize(profile: ExtractionProfile) -> dict:
         "name": profile.name,
         "allowed_types": _load_types(profile),
         "is_default": bool(profile.is_default),
+        "component_scope": profile.component_scope,
         "created_at": profile.created_at.isoformat() if profile.created_at else None,
     }
 
@@ -119,16 +126,23 @@ def _ensure_seed_profiles(db: Session) -> None:
                 name="All Types",
                 allowed_types=json.dumps(list_ner_types(db)),
                 is_default=True,
+                component_scope="entity_manager",
             )
             db.add(profile)
             db.flush()
         else:
             profile.is_default = True
 
-    # Existing databases predate profile tracks. Keep old data visible by
-    # assigning unscoped documents/entities to the default track.
-    db.query(Document).filter(Document.profile_id.is_(None)).update({"profile_id": profile.id})
-    db.query(Entity).filter(Entity.profile_id.is_(None)).update({"profile_id": profile.id})
+    # Keep unscoped entities visible in the EntityManager component without
+    # requiring other suite apps to understand EntityManager profile semantics.
+    unscoped_entities = (
+        db.query(Entity)
+        .outerjoin(EntityExtractionEntity, EntityExtractionEntity.entity_id == Entity.id)
+        .filter(EntityExtractionEntity.id.is_(None))
+        .all()
+    )
+    for entity in unscoped_entities:
+        ensure_entity_profile(db, entity, profile.id)
     db.commit()
 
 
@@ -189,6 +203,7 @@ def create_profile(body: ProfileCreate, db: Session = Depends(get_db)):
         name=name,
         allowed_types=json.dumps(cleaned_types),
         is_default=body.is_default,
+        component_scope="entity_manager",
     )
     db.add(profile)
     db.flush()
@@ -254,12 +269,11 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Profile not found")
     if db.query(ExtractionProfile).count() <= 1:
         raise HTTPException(400, "Cannot delete the last remaining profile")
-    document_count = db.query(Document).filter(Document.profile_id == profile_id).count()
     entity_count = db.query(Entity).filter(Entity.profile_id == profile_id).count()
-    if document_count or entity_count:
+    if entity_count:
         raise HTTPException(
             400,
-            f"Cannot delete a profile with {document_count} documents and {entity_count} entities",
+            f"Cannot delete a profile with {entity_count} entities",
         )
     db.delete(profile)
     db.commit()

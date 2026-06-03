@@ -10,7 +10,18 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import CoreferenceChain, CoreferenceMember, Document, Entity, ExtractionProfile, Mention
+from app.models import (
+    CoreferenceChain,
+    CoreferenceMember,
+    Document,
+    Entity,
+    EntityMention,
+    ExtractionProfile,
+    Mention,
+    ensure_entity_aliases,
+    ensure_entity_profile,
+)
+from app.services.corpus import create_article_with_text, create_processing_run, create_span_annotation
 from app.services.ingestion import extract_text
 from app.services.ner import extract_entities
 from app.services.coreference import resolve_coreferences
@@ -48,25 +59,24 @@ def _resolve_allowed_types(profile: ExtractionProfile | None) -> set[str] | None
 
 
 def _load_alt_labels(entity: Entity) -> list[str]:
-    try:
-        data = json.loads(entity.alternative_labels or "[]")
-        if isinstance(data, list):
-            return [str(x) for x in data if x]
-    except (ValueError, TypeError):
-        pass
-    return []
+    return [alias.alias for alias in entity.aliases if alias.alias]
 
 
 def _store_alt_labels(entity: Entity, labels: list[str]) -> None:
-    cleaned: list[str] = []
-    seen: set[str] = set()
-    for label in labels:
-        value = str(label).strip()
-        if not value or value == entity.canonical_name or value in seen:
-            continue
-        cleaned.append(value)
-        seen.add(value)
-    entity.alternative_labels = json.dumps(cleaned, ensure_ascii=False)
+    ensure_entity_aliases(entity, labels)
+
+
+def _mention_sentence(mention: Mention) -> str | None:
+    raw = mention.sentence
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            return data.get("sentence")
+    except (ValueError, TypeError):
+        pass
+    return raw
 
 
 def _sentence_for_span(text: str, start_char: int, end_char: int) -> str:
@@ -101,21 +111,20 @@ async def upload_document(
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {ALLOWED_EXTENSIONS}")
 
-    profile = _resolve_profile(profile_id, db)
-    resolved_profile_id = profile.id if profile else None
-    allowed_types = _resolve_allowed_types(profile)
+    resolved_profile_id = None
+    allowed_types = None
 
     # Extract text
     content = extract_text(file.file, file.filename or "unknown.txt")
 
     # Store document
-    doc = Document(
-        profile_id=resolved_profile_id,
+    doc = create_article_with_text(
+        db,
         filename=file.filename or "unknown",
         filetype=ext.lstrip("."),
         content_text=content,
+        profile_id=resolved_profile_id,
     )
-    db.add(doc)
     db.commit()
     db.refresh(doc)
 
@@ -149,7 +158,7 @@ def list_documents(
     """List all uploaded documents."""
     query = db.query(Document)
     if profile_id:
-        query = query.filter(Document.profile_id == profile_id)
+        pass
     docs = query.order_by(Document.uploaded_at.desc()).all()
     return [
         {
@@ -197,7 +206,7 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
                 "surface_form": m.surface_form,
                 "start_char": m.start_char,
                 "end_char": m.end_char,
-                "sentence": m.sentence,
+                "sentence": _mention_sentence(m),
                 "entity": {
                     "id": entities[m.entity_id].id,
                     "canonical_name": entities[m.entity_id].canonical_name,
@@ -256,22 +265,39 @@ def add_entity_from_selection(
     label = body.label.strip() or surface
     entity_type = body.entity_type.strip().upper() or "MISC"
 
+    run = create_processing_run(
+        db,
+        text_version_id=doc.current_text_version.id,
+        profile_id=None,
+        tool_name="manual_entity_annotation",
+        model_name=None,
+        model_version=None,
+        parameters={"source": "document_selection"},
+    )
+    annotation = create_span_annotation(
+        db,
+        processing_run_id=run.id,
+        text_version_id=doc.current_text_version.id,
+        annotation_type="entity",
+        start_char=body.start_char,
+        end_char=body.end_char,
+        exact_text=surface,
+        motivation="identifying",
+        body={"label": entity_type, "sentence": _sentence_for_span(doc.content_text, body.start_char, body.end_char)},
+    )
     entity = Entity(
-        profile_id=doc.profile_id,
         canonical_name=label,
         entity_type=entity_type,
-        alternative_labels="[]",
     )
     db.add(entity)
     db.flush()
+    ensure_entity_profile(db, entity, None)
 
-    mention = Mention(
+    mention = EntityMention(
+        annotation_id=annotation.id,
         entity_id=entity.id,
-        document_id=doc.id,
         surface_form=surface,
-        start_char=body.start_char,
-        end_char=body.end_char,
-        sentence=_sentence_for_span(doc.content_text, body.start_char, body.end_char),
+        linking_method="manual",
     )
     db.add(mention)
     db.commit()
@@ -302,19 +328,35 @@ def append_mention_from_selection(
     entity = db.query(Entity).filter(Entity.id == body.entity_id).first()
     if not entity:
         raise HTTPException(404, "Entity not found")
-    if entity.profile_id != doc.profile_id:
-        raise HTTPException(400, "Entity and document belong to different profiles")
-
     surface = _validate_span(doc, body.start_char, body.end_char)
-    mention = Mention(
-        entity_id=entity.id,
-        document_id=doc.id,
-        surface_form=surface,
+    run = create_processing_run(
+        db,
+        text_version_id=doc.current_text_version.id,
+        profile_id=None,
+        tool_name="manual_entity_annotation",
+        model_name=None,
+        model_version=None,
+        parameters={"source": "document_selection"},
+    )
+    annotation = create_span_annotation(
+        db,
+        processing_run_id=run.id,
+        text_version_id=doc.current_text_version.id,
+        annotation_type="entity",
         start_char=body.start_char,
         end_char=body.end_char,
-        sentence=_sentence_for_span(doc.content_text, body.start_char, body.end_char),
+        exact_text=surface,
+        motivation="identifying",
+        body={"sentence": _sentence_for_span(doc.content_text, body.start_char, body.end_char)},
+    )
+    mention = EntityMention(
+        annotation_id=annotation.id,
+        entity_id=entity.id,
+        surface_form=surface,
+        linking_method="manual",
     )
     db.add(mention)
+    ensure_entity_profile(db, entity, None)
 
     alt_labels = _load_alt_labels(entity)
     if surface != entity.canonical_name and surface not in alt_labels:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import json
-from typing import Any
+from typing import Any, Sequence
 
 from rdflib import Graph, Namespace, Literal, URIRef, RDF, RDFS
 from sqlalchemy.orm import Session
@@ -18,35 +18,51 @@ SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 OWL_SAME_AS = URIRef("http://www.w3.org/2002/07/owl#sameAs")
 
 
-def _decode_alt_labels(raw: str | None) -> list[str]:
+def _entity_alt_labels(entity: Entity) -> list[str]:
+    return [alias.alias for alias in entity.aliases if alias.alias]
+
+
+def _mention_sentence(mention: Mention) -> str | None:
     try:
-        data = json.loads(raw or "[]")
-        if isinstance(data, list):
-            return [str(x) for x in data if x]
+        data = json.loads(mention.sentence or "")
+        if isinstance(data, dict):
+            return data.get("sentence")
     except (ValueError, TypeError):
         pass
-    return []
+    return mention.sentence
 
 
-def export_json(db: Session, profile_id: str | None = None) -> str:
-    """Export all entities as nested JSON."""
+def _entity_query(db: Session, entity_types: Sequence[str] | None = None):
     query = db.query(Entity)
-    if profile_id:
-        query = query.filter(Entity.profile_id == profile_id)
+    normalized_types = [t.strip().upper() for t in entity_types or [] if t and t.strip()]
+    if normalized_types:
+        query = query.filter(Entity.entity_type.in_(normalized_types))
+    return query
+
+
+def export_json(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> str:
+    """Export all entities as nested JSON."""
+    query = _entity_query(db, entity_types)
     entities = query.all()
     data: list[dict[str, Any]] = []
 
     for ent in entities:
         mentions = db.query(Mention).filter(Mention.entity_id == ent.id).all()
-        enrichments = db.query(EnrichmentProperty).filter(
-            EnrichmentProperty.entity_id == ent.id
-        ).all()
+        enrichments = (
+            db.query(EnrichmentProperty).filter(EnrichmentProperty.entity_id == ent.id).all()
+            if include_enrichments
+            else []
+        )
 
-        data.append({
+        record = {
             "id": ent.id,
-            "profile_id": ent.profile_id,
             "canonical_name": ent.canonical_name,
-            "alternative_labels": _decode_alt_labels(ent.alternative_labels),
+            "alternative_labels": _entity_alt_labels(ent),
             "entity_type": ent.entity_type,
             "ontology_class_uri": ent.ontology_class_uri,
             "ontology_individual_uri": ent.ontology_individual_uri,
@@ -60,11 +76,13 @@ def export_json(db: Session, profile_id: str | None = None) -> str:
                     "surface_form": m.surface_form,
                     "start_char": m.start_char,
                     "end_char": m.end_char,
-                    "sentence": m.sentence,
+                    "sentence": _mention_sentence(m),
                 }
                 for m in mentions
             ],
-            "enrichment": [
+        }
+        if include_enrichments:
+            record["enrichment"] = [
                 {
                     "property_name": ep.property_name,
                     "property_uri": ep.property_uri,
@@ -72,25 +90,27 @@ def export_json(db: Session, profile_id: str | None = None) -> str:
                     "source": ep.source,
                 }
                 for ep in enrichments
-            ],
-        })
+            ]
+        data.append(record)
 
     return json.dumps(data, indent=2, ensure_ascii=False)
 
 
-def export_csv(db: Session, profile_id: str | None = None) -> str:
+def export_csv(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> str:
     """Export all entities as a flat CSV table."""
-    query = db.query(Entity)
-    if profile_id:
-        query = query.filter(Entity.profile_id == profile_id)
+    query = _entity_query(db, entity_types)
     entities = query.all()
     output = io.StringIO()
     writer = csv.writer(output)
 
     # Header
-    writer.writerow([
+    header = [
         "id",
-        "profile_id",
         "canonical_name",
         "alternative_labels",
         "entity_type",
@@ -100,21 +120,24 @@ def export_csv(db: Session, profile_id: str | None = None) -> str:
         "dbpedia_uri",
         "worldcat_uri",
         "mention_count",
-        "enrichment_count",
         "created_at",
-    ])
+    ]
+    if include_enrichments:
+        header.extend(["enrichment_count", "enrichment_json"])
+    writer.writerow(header)
 
     for ent in entities:
         mention_count = db.query(Mention).filter(Mention.entity_id == ent.id).count()
-        enrichment_count = db.query(EnrichmentProperty).filter(
-            EnrichmentProperty.entity_id == ent.id
-        ).count()
+        enrichments = (
+            db.query(EnrichmentProperty).filter(EnrichmentProperty.entity_id == ent.id).all()
+            if include_enrichments
+            else []
+        )
 
-        writer.writerow([
+        row = [
             ent.id,
-            ent.profile_id or "",
             ent.canonical_name,
-            "; ".join(_decode_alt_labels(ent.alternative_labels)),
+            "; ".join(_entity_alt_labels(ent)),
             ent.entity_type,
             ent.ontology_class_uri or "",
             ent.ontology_individual_uri or "",
@@ -122,15 +145,38 @@ def export_csv(db: Session, profile_id: str | None = None) -> str:
             ent.dbpedia_uri or "",
             ent.worldcat_uri or "",
             mention_count,
-            enrichment_count,
             ent.created_at.isoformat() if ent.created_at else "",
-        ])
+        ]
+        if include_enrichments:
+            row.extend(
+                [
+                    len(enrichments),
+                    json.dumps(
+                        [
+                            {
+                                "property_name": ep.property_name,
+                                "property_uri": ep.property_uri,
+                                "value": ep.value,
+                                "source": ep.source,
+                            }
+                            for ep in enrichments
+                        ],
+                        ensure_ascii=False,
+                    ),
+                ]
+            )
+        writer.writerow(row)
 
     return output.getvalue()
 
 
-def export_rdf_xml(db: Session, profile_id: str | None = None) -> str:
-    """Export all entities as RDF/XML using the loaded ontology."""
+def _entity_graph(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> Graph:
+    """Build an RDF graph for all exported entities."""
     EIAS = Namespace("http://eias.org/entity/")
     EIAS_PROP = Namespace("http://eias.org/property/")
 
@@ -147,9 +193,7 @@ def export_rdf_xml(db: Session, profile_id: str | None = None) -> str:
             if prefix:
                 g.bind(prefix, ns)
 
-    query = db.query(Entity)
-    if profile_id:
-        query = query.filter(Entity.profile_id == profile_id)
+    query = _entity_query(db, entity_types)
     entities = query.all()
 
     for ent in entities:
@@ -163,11 +207,8 @@ def export_rdf_xml(db: Session, profile_id: str | None = None) -> str:
         g.add((subj, RDFS.label, Literal(ent.canonical_name)))
         g.add((subj, SKOS.prefLabel, Literal(ent.canonical_name)))
         g.add((subj, EIAS_PROP["entityType"], Literal(ent.entity_type)))
-        if ent.profile_id:
-            g.add((subj, EIAS_PROP["profileID"], Literal(ent.profile_id)))
-
         # Alternative labels
-        for alt in _decode_alt_labels(ent.alternative_labels):
+        for alt in _entity_alt_labels(ent):
             g.add((subj, SKOS.altLabel, Literal(alt)))
 
         # Linked ontology individual (Particular)
@@ -183,15 +224,46 @@ def export_rdf_xml(db: Session, profile_id: str | None = None) -> str:
             g.add((subj, EIAS_PROP["worldcatURI"], URIRef(ent.worldcat_uri)))
 
         # Enrichment properties
-        enrichments = db.query(EnrichmentProperty).filter(
-            EnrichmentProperty.entity_id == ent.id
-        ).all()
-        for ep in enrichments:
-            pred = URIRef(ep.property_uri) if ep.property_uri.startswith("http") else EIAS_PROP[ep.property_name]
-            # Check if value is a URI or literal
-            if ep.value.startswith("http://") or ep.value.startswith("https://"):
-                g.add((subj, pred, URIRef(ep.value)))
-            else:
-                g.add((subj, pred, Literal(ep.value)))
+        if include_enrichments:
+            enrichments = db.query(EnrichmentProperty).filter(
+                EnrichmentProperty.entity_id == ent.id
+            ).all()
+            for ep in enrichments:
+                pred = URIRef(ep.property_uri) if ep.property_uri.startswith("http") else EIAS_PROP[ep.property_name]
+                # Check if value is a URI or literal
+                if ep.value.startswith("http://") or ep.value.startswith("https://"):
+                    g.add((subj, pred, URIRef(ep.value)))
+                else:
+                    g.add((subj, pred, Literal(ep.value)))
 
-    return g.serialize(format="xml")
+    return g
+
+
+def export_rdf_xml(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> str:
+    """Export all entities as RDF/XML using the loaded ontology."""
+    return _entity_graph(db, profile_id, entity_types, include_enrichments).serialize(format="xml")
+
+
+def export_turtle(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> str:
+    """Export all entities as Turtle."""
+    return _entity_graph(db, profile_id, entity_types, include_enrichments).serialize(format="turtle")
+
+
+def export_json_ld(
+    db: Session,
+    profile_id: str | None = None,
+    entity_types: Sequence[str] | None = None,
+    include_enrichments: bool = True,
+) -> str:
+    """Export all entities as JSON-LD."""
+    return _entity_graph(db, profile_id, entity_types, include_enrichments).serialize(format="json-ld", indent=2)

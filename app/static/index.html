@@ -3,83 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EIAS Entity Manager</title>
+    <title>EIAS</title>
     <script>
         if (localStorage.getItem('eias.uiTheme') !== 'classic') {
             document.documentElement.classList.add('theme-boot-liquid-glass');
         }
     </script>
-    <link rel="stylesheet" href="/static/css/styles.css?v=20260513-custom-ner-labels">
+    <link rel="stylesheet" href="/static/css/styles.css?v=20260528-pdf-workspace">
 </head>
 <body>
-    <header>
-        <h1>EIAS Entity Manager</h1>
-        <nav>
-            <button class="nav-btn active" data-view="settings">Settings</button>
-            <button class="nav-btn" data-view="documents">Documents</button>
-            <button class="nav-btn" data-view="document-view">Document View</button>
-            <button class="nav-btn" data-view="entities">Entities</button>
-            <button class="nav-btn" data-view="ontology">Ontology</button>
-            <button class="nav-btn" data-view="export">Export</button>
+    <header class="suite-header">
+        <div class="suite-title-row">
+            <h1>EIAS</h1>
+            <nav class="app-nav" aria-label="Applications">
+                <button class="app-nav-btn active" data-app="document-manager">DocumentManager</button>
+                <button class="app-nav-btn" data-app="entity-manager">EntityManager</button>
+                <button class="app-nav-btn" data-app="topic-manager">TopicManager</button>
+                <button class="app-nav-btn" data-app="database">Database</button>
+                <button class="app-nav-btn" data-app="export">Export</button>
+                <button class="app-nav-btn app-nav-btn-muted" data-app="settings">Settings</button>
+            </nav>
+        </div>
+        <nav class="sub-nav" aria-label="Application pages">
+            <button class="subnav-btn active" data-app="document-manager" data-view="dm-ingest">Ingest</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-articles">Articles</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-renderer">Renderer</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-metadata">Metadata</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-pdf-annotations">PDF Annotations</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-annotations">Annotations</button>
+            <button class="subnav-btn" data-app="document-manager" data-view="dm-pipeline">Pipeline Status</button>
+
+            <button class="subnav-btn hidden" data-app="entity-manager" data-view="entities">Entities</button>
+            <button class="subnav-btn hidden" data-app="entity-manager" data-view="document-view">Entity Renderer</button>
+            <button class="subnav-btn hidden" data-app="entity-manager" data-view="ontology">Ontology</button>
+            <button class="subnav-btn hidden" data-app="entity-manager" data-view="grounding-enrichment">Grounding/Enrichment</button>
+
+            <button class="subnav-btn hidden" data-app="topic-manager" data-view="tm-article-topics">Article Topics</button>
+            <button class="subnav-btn hidden" data-app="topic-manager" data-view="tm-keyterm-renderer">Key Term Renderer</button>
+            <button class="subnav-btn hidden" data-app="topic-manager" data-view="tm-fast-review">FAST Review</button>
+            <button class="subnav-btn hidden" data-app="topic-manager" data-view="tm-schemas">Schemas</button>
+
+            <button class="subnav-btn hidden" data-app="database" data-view="database-tables">Tables</button>
+            <button class="subnav-btn hidden" data-app="export" data-view="export">Quick Exports</button>
+            <button class="subnav-btn hidden" data-app="settings" data-view="settings-entity-manager">EntityManager</button>
+            <button class="subnav-btn hidden" data-app="settings" data-view="settings-document-manager">DocumentManager</button>
+            <button class="subnav-btn hidden" data-app="settings" data-view="settings-topic-manager">TopicManager</button>
         </nav>
     </header>
 
     <main>
-        <!-- Settings View -->
-        <section id="view-settings" class="view active">
+        <!-- DocumentManager: Ingest -->
+        <section id="view-dm-ingest" class="view active" data-app="document-manager">
+            <div class="panel full-width">
+                <h2>Ingest Article</h2>
+                <form id="document-manager-upload-form" class="pipeline-settings-form">
+                    <label>
+                        <span>Source file</span>
+                        <input type="file" id="dm-file-input" accept=".txt,.md,.pdf,.json" required>
+                    </label>
+                    <label>
+                        <span>Language</span>
+                        <input type="text" id="dm-language-input" placeholder="en">
+                    </label>
+                    <label>
+                        <span>Publication date</span>
+                        <input type="text" id="dm-publication-date-input" placeholder="YYYY-MM-DD">
+                    </label>
+                    <label style="flex: 1; min-width: 260px;">
+                        <span>Canonical URI</span>
+                        <input type="text" id="dm-canonical-uri-input" placeholder="https://...">
+                    </label>
+                    <textarea id="dm-metadata-input" class="alt-labels-input" placeholder='Optional metadata JSON, e.g. {"author":"..."}'></textarea>
+                    <div class="pipeline-settings-actions">
+                        <button type="submit" class="btn btn-primary">Upload Article</button>
+                    </div>
+                </form>
+                <div id="dm-upload-status" class="status-msg"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: Articles -->
+        <section id="view-dm-articles" class="view hidden" data-app="document-manager">
+            <div class="panel full-width">
+                <h2>Articles</h2>
+                <div id="dm-article-list" class="item-list"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: Renderer -->
+        <section id="view-dm-renderer" class="view hidden" data-app="document-manager">
+            <div class="panel document-view-panel">
+                <div class="document-view-header">
+                    <h2>Renderer</h2>
+                    <select id="dm-renderer-select"><option value="">Select an article</option></select>
+                </div>
+                <div id="dm-renderer-status" class="status-msg"></div>
+                <div id="dm-rendered-text" class="document-rendered-text"></div>
+            </div>
             <div class="panel">
-                <h2>Active Profile</h2>
-                <div class="settings-profile-row">
-                    <label for="settings-active-profile-select">Profile</label>
-                    <select id="settings-active-profile-select"></select>
-                    <span id="active-profile-summary" class="settings-summary"></span>
+                <h2>Metadata</h2>
+                <div id="dm-renderer-metadata"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: Annotations -->
+        <section id="view-dm-annotations" class="view hidden" data-app="document-manager">
+            <div class="panel full-width">
+                <h2>Annotation Explorer</h2>
+                <div class="search-bar">
+                    <select id="dm-annotations-article-select"><option value="">Select an article</option></select>
+                    <input type="text" id="dm-annotations-component" placeholder="component slug">
+                    <input type="text" id="dm-annotations-type" placeholder="annotation type">
+                    <button type="button" class="btn btn-primary" id="dm-annotations-load-btn">Load</button>
+                </div>
+                <div id="dm-annotations-list" class="item-list"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: Pipeline Status -->
+        <section id="view-dm-pipeline" class="view hidden" data-app="document-manager">
+            <div class="panel full-width">
+                <h2>Pipeline Status</h2>
+                <div id="dm-pipeline-list" class="item-list"></div>
+            </div>
+        </section>
+
+        <!-- EntityManager: Corpus Context -->
+        <section id="view-documents" class="view hidden" data-app="entity-manager">
+            <div class="panel">
+                <h2>Corpus Context</h2>
+                <p class="settings-summary">Read-only article context from the shared PostgreSQL corpus. Use DocumentManager for ingestion and metadata.</p>
+                <div id="upload-status" class="status-msg"></div>
+                <div id="upload-queue" class="upload-queue"></div>
+            </div>
+            <div class="panel">
+                <h2>Articles</h2>
+                <div id="document-list" class="item-list"></div>
+            </div>
+            <div id="document-detail" class="panel hidden">
+                <h2>Article Entity Context</h2>
+                <div id="doc-detail-content"></div>
+            </div>
+        </section>
+
+        <!-- EntityManager: Entity Renderer -->
+        <section id="view-document-view" class="view hidden" data-app="entity-manager">
+            <div class="panel document-view-panel">
+                <div class="document-view-header">
+                    <h2>Entity Renderer</h2>
+                    <select id="document-view-select">
+                        <option value="">Select a document</option>
+                    </select>
+                </div>
+                <div id="document-view-status" class="status-msg"></div>
+                <div id="document-rendered-text" class="document-rendered-text"></div>
+            </div>
+            <div id="document-entity-focus" class="panel hidden">
+                <h2 id="document-entity-focus-title">Entity Detail</h2>
+                <div id="document-entity-focus-content"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: Metadata -->
+        <section id="view-dm-metadata" class="view hidden" data-app="document-manager">
+            <div class="panel full-width">
+                <div class="document-view-header">
+                    <h2>Article Metadata</h2>
+                    <select id="entity-metadata-article-select"><option value="">Select an article</option></select>
+                </div>
+                <p class="settings-summary">Edit corpus metadata and attach formatted PDF or machine-readable text versions for the selected article.</p>
+                <div id="entity-metadata-status" class="status-msg"></div>
+            </div>
+            <div class="panel">
+                <h2>Metadata JSON</h2>
+                <textarea id="entity-metadata-json" class="metadata-json-editor" placeholder='{"author":"..."}'></textarea>
+                <div class="pipeline-settings-actions">
+                    <label class="type-checkbox">
+                        <input type="checkbox" id="entity-metadata-merge" checked>
+                        <span>Merge with existing metadata</span>
+                    </label>
+                    <button type="button" class="btn btn-primary" id="entity-metadata-save-btn">Save Metadata</button>
+                    <button type="button" class="btn" id="entity-metadata-apply-template-btn">Template Empty Articles</button>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Article Versions</h2>
+                <form id="entity-version-upload-form" class="pipeline-settings-form">
+                    <label>
+                        <span>Add file version</span>
+                        <input type="file" id="entity-version-file-input" accept=".txt,.md,.pdf,.json">
+                    </label>
+                    <label>
+                        <span>Format role</span>
+                        <select id="entity-version-format-role">
+                            <option value="">Auto</option>
+                            <option value="machine_readable">Machine-readable text</option>
+                            <option value="formatted_pdf">Formatted PDF</option>
+                            <option value="metadata_json">Metadata JSON</option>
+                        </select>
+                    </label>
+                    <label class="type-checkbox">
+                        <input type="checkbox" id="entity-version-set-current">
+                        <span>Make current machine-readable text</span>
+                    </label>
+                    <div class="pipeline-settings-actions">
+                        <button type="submit" class="btn btn-primary">Add Version</button>
+                    </div>
+                </form>
+                <div id="entity-version-list" class="item-list"></div>
+            </div>
+        </section>
+
+        <!-- DocumentManager: PDF Annotations -->
+        <section id="view-dm-pdf-annotations" class="view hidden pdf-annotation-view" data-app="document-manager">
+            <div class="panel full-width">
+                <div class="document-view-header">
+                    <h2>PDF Annotations</h2>
+                    <div class="search-bar">
+                        <select id="entity-pdf-article-select"><option value="">Select an article</option></select>
+                        <select id="entity-pdf-source-select"><option value="">Select PDF source</option></select>
+                    </div>
+                </div>
+                <p class="settings-summary">Add page-level annotations to the formatted PDF source while the machine-readable text remains the article version used for NLP processing.</p>
+                <div id="entity-pdf-status" class="status-msg"></div>
+            </div>
+            <div class="pdf-annotation-workspace full-width">
+                <div class="panel pdf-display-panel">
+                    <div class="pdf-workbar">
+                        <div class="pdf-tool-switch" aria-label="PDF annotation mode">
+                            <button type="button" class="pdf-mode-btn active" data-pdf-mode="box">Draw Region</button>
+                            <button type="button" class="pdf-mode-btn" data-pdf-mode="text">Select Text</button>
+                        </div>
+                        <label class="pdf-inline-control">
+                            <span>Page</span>
+                            <input type="number" id="entity-pdf-page-number" min="1" value="1">
+                        </label>
+                        <label class="pdf-inline-control">
+                            <span>Zoom</span>
+                            <select id="entity-pdf-zoom">
+                                <option value="1.2">120%</option>
+                                <option value="1.5" selected>150%</option>
+                                <option value="1.8">180%</option>
+                                <option value="2.2">220%</option>
+                            </select>
+                        </label>
+                        <span id="entity-pdf-page-count" class="runtime-pill">No PDF loaded</span>
+                    </div>
+                    <div class="pdf-preview-frame large pdf-scroll-viewer" id="entity-pdf-scroll-viewer">
+                        <div id="entity-pdf-preview-empty" class="pdf-preview-empty">Select an article and PDF source.</div>
+                        <div id="entity-pdf-page-stack" class="pdf-page-stack"></div>
+                    </div>
+                </div>
+                <div class="panel pdf-tools-panel">
+                    <h2>Annotation Controls</h2>
+                    <div class="annotation-guidance">
+                        <strong>Workflow</strong>
+                        <span>Draw a box around visual regions, or switch to text selection and drag across OCR/extracted words. The selected region is saved as normalized page coordinates.</span>
+                    </div>
+                    <form id="entity-pdf-annotation-form" class="pipeline-settings-form pdf-annotation-form">
+                        <fieldset class="annotation-control-group">
+                            <legend>Classification</legend>
+                            <label>
+                                <span>Annotation type</span>
+                                <select id="entity-pdf-annotation-type">
+                                    <option value="figure_graphic">Content - Figure / Graphic</option>
+                                    <option value="table_of_contents">Structure - Table of Contents</option>
+                                    <option value="text_hierarchy">Structure - Text Hierarchy</option>
+                                    <option value="footnote">Paratext - Footnote</option>
+                                    <option value="page_number">Paratext - Page Number</option>
+                                </select>
+                            </label>
+                            <label id="entity-pdf-hierarchy-field" class="hidden">
+                                <span>Hierarchy level</span>
+                                <select id="entity-pdf-hierarchy-level">
+                                    <option value="">None</option>
+                                    <option value="title">Title</option>
+                                    <option value="heading">Heading</option>
+                                    <option value="sub-heading">Sub-heading</option>
+                                    <option value="body_text">Body Text</option>
+                                </select>
+                            </label>
+                        </fieldset>
+                        <fieldset class="annotation-control-group">
+                            <legend>Target</legend>
+                            <label>
+                                <span>Selected page</span>
+                                <input type="number" id="entity-pdf-selected-page" min="1" value="1" readonly>
+                            </label>
+                            <label>
+                                <span>Selected text</span>
+                                <textarea id="entity-pdf-selected-text" class="alt-labels-input compact" placeholder="Text selection appears here"></textarea>
+                            </label>
+                            <div class="bbox-grid">
+                                <label><span>x</span><input type="number" id="entity-pdf-bbox-x" placeholder="0.000" step="0.001" min="0" max="1"></label>
+                                <label><span>y</span><input type="number" id="entity-pdf-bbox-y" placeholder="0.000" step="0.001" min="0" max="1"></label>
+                                <label><span>width</span><input type="number" id="entity-pdf-bbox-width" placeholder="0.000" step="0.001" min="0" max="1"></label>
+                                <label><span>height</span><input type="number" id="entity-pdf-bbox-height" placeholder="0.000" step="0.001" min="0" max="1"></label>
+                            </div>
+                            <button type="button" class="btn btn-sm" id="entity-pdf-clear-selection-btn">Clear Selection</button>
+                        </fieldset>
+                        <fieldset class="annotation-control-group">
+                            <legend>Description</legend>
+                            <label>
+                                <span>Label</span>
+                                <input type="text" id="entity-pdf-label" placeholder="Short label">
+                            </label>
+                            <label>
+                                <span>Note or transcription</span>
+                                <textarea id="entity-pdf-description" class="alt-labels-input" placeholder="Description, transcription, or annotation note"></textarea>
+                            </label>
+                        </fieldset>
+                        <div class="pipeline-settings-actions">
+                            <button type="submit" class="btn btn-primary">Add PDF Annotation</button>
+                        </div>
+                    </form>
+                    <h2>Saved Annotations</h2>
+                    <div id="entity-pdf-annotation-list" class="item-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EntityManager: Entities -->
+        <section id="view-entities" class="view hidden" data-app="entity-manager">
+            <div class="panel">
+                <h2>Entities</h2>
+                <div class="search-bar">
+                    <input type="text" id="entity-search" placeholder="Search entities...">
+                    <select id="entity-type-filter">
+                        <option value="">All types</option>
+                    </select>
+                    <select id="entity-grounded-filter">
+                        <option value="">All</option>
+                        <option value="yes">Grounded</option>
+                        <option value="no">Ungrounded</option>
+                    </select>
+                    <select id="entity-ontology-filter">
+                        <option value="">All ontology links</option>
+                        <option value="yes">Linked to ontology</option>
+                        <option value="no">Not linked to ontology</option>
+                    </select>
+                    <select id="entity-document-filter" title="Filter to entities mentioned in a specific document">
+                        <option value="">All documents</option>
+                    </select>
+                    <button type="button" class="btn btn-danger btn-sm" id="entity-clear-all-btn" style="margin-left: auto;">Clear All</button>
+                </div>
+                <div id="entity-list" class="item-list"></div>
+            </div>
+            <div id="entity-detail" class="panel hidden">
+                <h2 id="entity-detail-title">Entity Detail</h2>
+                <div id="entity-detail-content"></div>
+            </div>
+        </section>
+
+        <!-- EntityManager: Ontology -->
+        <section id="view-ontology" class="view hidden" data-app="entity-manager">
+            <div class="panel">
+                <h2>Ontology</h2>
+                <form id="ontology-upload-form">
+                    <input type="file" id="ontology-file-input" accept=".ttl" required>
+                    <button type="submit">Upload .ttl</button>
+                </form>
+                <div id="ontology-status" class="status-msg"></div>
+            </div>
+            <div class="panel">
+                <h2>Classes</h2>
+                <div id="ontology-classes" class="item-list"></div>
+            </div>
+            <div class="panel">
+                <h2>NER ↔ Ontology Mappings</h2>
+                <div id="mapping-editor"></div>
+                <form id="mapping-form" class="mapping-form">
+                    <select id="mapping-spacy-label"></select>
+                    <select id="mapping-ontology-class"></select>
+                    <button type="submit">Add Mapping</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- EntityManager: Grounding/Enrichment -->
+        <section id="view-grounding-enrichment" class="view hidden" data-app="entity-manager">
+            <div class="panel full-width">
+                <h2>Grounding/Enrichment</h2>
+                <div class="search-bar">
+                    <input type="text" id="grounding-entity-search" placeholder="Search entities...">
+                    <button type="button" class="btn btn-primary" onclick="switchView('entities')">Open Entities</button>
+                </div>
+                <div class="settings-summary">Grounding, enrichment, and standard triples are managed from each entity detail.</div>
+            </div>
+        </section>
+
+        <!-- Database -->
+        <section id="view-database-tables" class="view hidden" data-app="database">
+            <div class="panel">
+                <h2>Tables</h2>
+                <div id="database-table-list" class="item-list"></div>
+            </div>
+            <div class="panel database-browser-panel">
+                <div class="document-view-header">
+                    <h2 id="database-table-title">Database</h2>
+                    <div class="search-bar">
+                        <button type="button" class="btn btn-sm" id="database-prev-btn">Prev</button>
+                        <button type="button" class="btn btn-sm" id="database-next-btn">Next</button>
+                    </div>
+                </div>
+                <div id="database-table-meta" class="settings-summary"></div>
+                <div id="database-table-content" class="database-table-wrap"></div>
+            </div>
+        </section>
+
+        <!-- Export -->
+        <section id="view-export" class="view hidden" data-app="export">
+            <div class="panel full-width">
+                <h2>Export Hub</h2>
+                <div class="export-hub-grid">
+                    <div class="export-card">
+                        <h3>Entities</h3>
+                        <p id="export-summary" class="settings-summary">Download entities from the shared corpus database.</p>
+                        <div id="export-entity-types" class="standard-triples-grid compact"></div>
+                        <label class="type-checkbox">
+                            <input type="checkbox" id="export-include-enrichments" checked>
+                            <span>Include entity relations and enrichments</span>
+                        </label>
+                        <div class="export-buttons">
+                            <button onclick="downloadEntityQuickExport('ttl')" class="export-btn">.ttl</button>
+                            <button onclick="downloadEntityQuickExport('json')" class="export-btn">.json</button>
+                            <button onclick="downloadEntityQuickExport('csv')" class="export-btn">.csv</button>
+                        </div>
+                    </div>
+                    <div class="export-card">
+                        <h3>Full Graph</h3>
+                        <div class="export-buttons">
+                            <button onclick="downloadExport('json')" class="export-btn">JSON</button>
+                            <button onclick="downloadExport('csv')" class="export-btn">CSV</button>
+                            <button onclick="downloadExport('rdf')" class="export-btn">RDF/XML</button>
+                            <button onclick="downloadExport('ttl')" class="export-btn">Turtle</button>
+                            <button onclick="downloadExport('jsonld')" class="export-btn">JSON-LD</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings: EntityManager -->
+        <section id="view-settings-entity-manager" class="view hidden" data-app="settings">
+            <div class="panel full-width">
+                <h2>EntityManager Settings</h2>
+                <div class="settings-summary">
+                    APIs and libraries: spaCy, coreferee, Wikidata, DBpedia, WorldCat Entities, rdflib, rapidfuzz.
                 </div>
             </div>
             <div class="panel">
                 <h2>Interface</h2>
-                <div class="settings-profile-row">
+                <div class="settings-row">
                     <label for="settings-ui-theme-select">Theme</label>
                     <select id="settings-ui-theme-select">
                         <option value="liquid-glass">Liquid Glass</option>
                         <option value="classic">Classic</option>
                     </select>
-                    <span class="settings-summary">Controls the interface style for this browser.</span>
+                    <span class="settings-summary">Browser-local visual mode.</span>
                 </div>
             </div>
             <div class="panel">
-                <h2>Extraction Profiles</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                    A profile owns its own documents, entities, and exports. Its entity type choices control what is kept when documents are uploaded into that profile.
-                </p>
-                <form id="ner-type-form" class="ner-type-form" style="margin-bottom: 1rem;">
-                    <input type="text" id="ner-type-label" placeholder="New label, e.g. CONCEPT">
-                    <button type="submit" class="btn btn-primary">Add Entity Type</button>
-                </form>
-                <div id="ner-type-status" class="status-msg"></div>
-                <div id="profile-list" class="item-list"></div>
-            </div>
-            <div class="panel">
-                <h2 id="profile-form-title">New Profile</h2>
-                <form id="profile-form">
-                    <input type="hidden" id="profile-id">
-                    <input type="text" id="profile-name" placeholder="Profile name" required>
-                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">
-                        <input type="checkbox" id="profile-is-default"> Default
-                    </label>
-                    <div style="flex-basis: 100%;"></div>
-                    <div id="profile-types-grid" class="profile-types-grid"></div>
-                    <div style="flex-basis: 100%; display: flex; gap: 0.5rem;">
-                        <button type="submit" id="profile-save-btn">Save Profile</button>
-                        <button type="button" class="btn" id="profile-reset-btn">Reset</button>
-                    </div>
-                </form>
-                <div id="profile-status" class="status-msg"></div>
-            </div>
-            <div class="panel">
                 <h2>Standard Triples</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                    Selected triples are imported automatically after Wikidata grounding. WorldCat and DBpedia URIs are inferred from Wikidata when available.
-                </p>
+                <p class="settings-summary">Controls which grounded Wikidata values are imported as enrichment properties.</p>
                 <div id="standard-triples-settings" class="standard-triples-grid"></div>
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
                     <button type="button" class="btn btn-primary" id="standard-triples-save-btn">Save Standard Triples</button>
@@ -87,12 +473,13 @@
                 </div>
                 <div id="standard-triples-status" class="status-msg"></div>
             </div>
-            <div class="panel">
+            <div class="panel full-width">
                 <h2>Pipeline Settings</h2>
+                <p class="settings-summary">Runtime values used by EntityManager extraction, dedupe, grounding, and external lookups.</p>
                 <form id="pipeline-settings-form" class="pipeline-settings-form">
                     <label>
                         <span>spaCy model</span>
-                        <input type="text" id="pipeline-spacy-model" placeholder="en_core_web_sm">
+                        <input type="text" id="pipeline-spacy-model" placeholder="en_core_web_lg">
                     </label>
                     <label>
                         <span>Fuzzy dedupe threshold</span>
@@ -124,125 +511,137 @@
             </div>
         </section>
 
-        <!-- Document View -->
-        <section id="view-document-view" class="view hidden">
+        <!-- Settings: DocumentManager -->
+        <section id="view-settings-document-manager" class="view hidden" data-app="settings">
+            <div class="panel full-width">
+                <h2>DocumentManager Settings</h2>
+                <div class="settings-summary">
+                    APIs and libraries: FastAPI UploadFile, pypdf/pdf text extraction, SQLAlchemy corpus tables, PostgreSQL source-file provenance.
+                </div>
+                <div class="detail-section">
+                    <h3>Ingestion</h3>
+                    <div class="detail-row"><span class="detail-label">Accepted files</span><span class="detail-value">.txt, .md, .pdf, .json</span></div>
+                    <div class="detail-row"><span class="detail-label">Pipeline behavior</span><span class="detail-value">Uploads store article text and metadata only.</span></div>
+                    <div class="detail-row"><span class="detail-label">Storage</span><span class="detail-value">Source files and normalized text versions are persisted with SHA-256 provenance.</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings: TopicManager -->
+        <section id="view-settings-topic-manager" class="view hidden" data-app="settings">
+            <div class="panel full-width">
+                <h2>TopicManager Settings</h2>
+                <div class="settings-summary">
+                    APIs and libraries: deterministic local keyphrase extraction, OCLC assignFAST/searchFAST, SQLAlchemy TopicManager review tables.
+                </div>
+                <div class="detail-section">
+                    <h3>Keyword Extraction</h3>
+                    <form id="topic-manager-settings-form" class="pipeline-settings-form">
+                        <label>
+                            <span>Max keywords</span>
+                            <input type="number" id="tm-settings-max-keywords" min="1" max="100">
+                        </label>
+                        <label>
+                            <span>Min phrase length</span>
+                            <input type="number" id="tm-settings-min-phrase-chars" min="1" max="80">
+                        </label>
+                        <label>
+                            <span>Max phrase words</span>
+                            <input type="number" id="tm-settings-max-phrase-words" min="1" max="12">
+                        </label>
+                        <label>
+                            <span>Unigrams</span>
+                            <select id="tm-settings-unigram-mode">
+                                <option value="proper_nouns_only">Proper nouns only</option>
+                                <option value="all_nouns">All nouns</option>
+                                <option value="none">None</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>FAST cache keywords</span>
+                            <input type="number" id="tm-settings-fast-limit" min="0" max="50">
+                        </label>
+                        <label>
+                            <span>FAST rows per keyword</span>
+                            <input type="number" id="tm-settings-fast-rows" min="1" max="20">
+                        </label>
+                        <div class="pipeline-settings-actions">
+                            <button type="submit" class="btn btn-primary">Save TopicManager Settings</button>
+                            <button type="button" class="btn" id="topic-manager-settings-reload-btn">Reload</button>
+                        </div>
+                    </form>
+                    <div id="topic-manager-settings-status" class="status-msg"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TopicManager: Article Topics -->
+        <section id="view-tm-article-topics" class="view hidden" data-app="topic-manager">
+            <div class="panel full-width">
+                <div class="document-view-header">
+                    <h2>Article Topics</h2>
+                    <div class="search-bar">
+                        <select id="tm-article-select"><option value="">Select an article</option></select>
+                        <button type="button" class="btn btn-primary" id="tm-extract-keywords-btn">Extract Keywords</button>
+                        <button type="button" class="btn btn-danger" id="tm-clear-generated-keywords-btn">Clear Generated</button>
+                    </div>
+                </div>
+                <div id="tm-topic-status" class="status-msg"></div>
+                <div id="tm-keyword-list" class="item-list"></div>
+            </div>
+        </section>
+
+        <!-- TopicManager: Key Term Renderer -->
+        <section id="view-tm-keyterm-renderer" class="view hidden" data-app="topic-manager">
             <div class="panel document-view-panel">
                 <div class="document-view-header">
-                    <h2>Document View</h2>
-                    <select id="document-view-select">
-                        <option value="">Select a document</option>
-                    </select>
+                    <h2>Key Term Renderer</h2>
+                    <select id="tm-renderer-article-select"><option value="">Select an article</option></select>
                 </div>
-                <div id="document-view-status" class="status-msg"></div>
-                <div id="document-rendered-text" class="document-rendered-text"></div>
+                <div id="tm-renderer-status" class="status-msg"></div>
+                <div id="tm-rendered-text" class="document-rendered-text"></div>
             </div>
-            <div id="document-entity-focus" class="panel hidden">
-                <h2 id="document-entity-focus-title">Entity Detail</h2>
-                <div id="document-entity-focus-content"></div>
+            <div id="tm-keyterm-focus" class="panel hidden">
+                <h2 id="tm-keyterm-focus-title">Key Term</h2>
+                <div id="tm-keyterm-focus-content"></div>
             </div>
         </section>
 
-        <!-- Documents View -->
-        <section id="view-documents" class="view hidden">
+        <!-- TopicManager: FAST Review -->
+        <section id="view-tm-fast-review" class="view hidden" data-app="topic-manager">
             <div class="panel">
-                <h2>Upload Document</h2>
-                <form id="upload-form">
-                    <input type="file" id="file-input" accept=".txt,.md,.pdf,.json" multiple required>
-                    <span id="upload-profile-label" class="settings-summary"></span>
-                    <button type="submit" id="upload-btn">Upload &amp; Process</button>
+                <h2>Keyword Review Queue</h2>
+                <select id="tm-review-article-select"><option value="">Select an article</option></select>
+                <div id="tm-review-keywords" class="item-list" style="margin-top: 1rem;"></div>
+            </div>
+            <div class="panel">
+                <h2>FAST Candidates</h2>
+                <div id="tm-fast-review-detail"></div>
+            </div>
+        </section>
+
+        <!-- TopicManager: Schemas -->
+        <section id="view-tm-schemas" class="view hidden" data-app="topic-manager">
+            <div class="panel">
+                <h2>Schemas</h2>
+                <form id="tm-schema-form">
+                    <input type="text" id="tm-schema-label" placeholder="Schema label" required>
+                    <select id="tm-schema-type">
+                        <option value="topic">Topic</option>
+                        <option value="method">Method</option>
+                        <option value="field">Field</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Create Schema</button>
                 </form>
-                <div id="upload-status" class="status-msg"></div>
-                <div id="upload-queue" class="upload-queue"></div>
+                <div id="tm-schema-status" class="status-msg"></div>
             </div>
             <div class="panel">
-                <h2>Documents</h2>
-                <div id="document-list" class="item-list"></div>
-            </div>
-            <div id="document-detail" class="panel hidden">
-                <h2>Document Detail</h2>
-                <div id="doc-detail-content"></div>
-            </div>
-        </section>
-
-        <!-- Entities View -->
-        <section id="view-entities" class="view hidden">
-            <div class="panel">
-                <h2>Entities</h2>
-                <div class="search-bar">
-                    <input type="text" id="entity-search" placeholder="Search entities...">
-                    <select id="entity-type-filter">
-                        <option value="">All types</option>
-                    </select>
-                    <select id="entity-grounded-filter">
-                        <option value="">All</option>
-                        <option value="yes">Grounded</option>
-                        <option value="no">Ungrounded</option>
-                    </select>
-                    <select id="entity-ontology-filter">
-                        <option value="">All ontology links</option>
-                        <option value="yes">Linked to ontology</option>
-                        <option value="no">Not linked to ontology</option>
-                    </select>
-                    <select id="entity-document-filter" title="Filter to entities mentioned in a specific document">
-                        <option value="">All documents</option>
-                    </select>
-                    <button type="button" class="btn btn-danger btn-sm" id="entity-clear-all-btn" style="margin-left: auto;">Clear All</button>
-                </div>
-                <div id="entity-list" class="item-list"></div>
-            </div>
-            <div id="entity-detail" class="panel hidden">
-                <h2 id="entity-detail-title">Entity Detail</h2>
-                <div id="entity-detail-content"></div>
-            </div>
-        </section>
-
-        <!-- Ontology View -->
-        <section id="view-ontology" class="view hidden">
-            <div class="panel">
-                <h2>Ontology</h2>
-                <form id="ontology-upload-form">
-                    <input type="file" id="ontology-file-input" accept=".ttl" required>
-                    <button type="submit">Upload .ttl</button>
-                </form>
-                <div id="ontology-status" class="status-msg"></div>
-            </div>
-            <div class="panel">
-                <h2>Classes</h2>
-                <div id="ontology-classes" class="item-list"></div>
-            </div>
-            <div class="panel">
-                <h2>NER ↔ Ontology Mappings</h2>
-                <div id="mapping-editor"></div>
-                <form id="mapping-form" class="mapping-form">
-                    <select id="mapping-spacy-label">
-                    </select>
-                    <select id="mapping-ontology-class"></select>
-                    <button type="submit">Add Mapping</button>
-                </form>
-            </div>
-        </section>
-
-        <!-- Export View -->
-        <section id="view-export" class="view hidden">
-            <div class="panel">
-                <h2>Export Profile Track</h2>
-                <p id="export-profile-summary">Download entities from the active profile.</p>
-                <div class="export-buttons">
-                    <button onclick="downloadExport('json')" class="export-btn">
-                        Download JSON
-                    </button>
-                    <button onclick="downloadExport('csv')" class="export-btn">
-                        Download CSV
-                    </button>
-                    <button onclick="downloadExport('rdf')" class="export-btn">
-                        Download RDF/XML
-                    </button>
-                </div>
+                <h2>Schema Memberships</h2>
+                <div id="tm-schema-list" class="item-list"></div>
             </div>
         </section>
     </main>
 
-    <!-- Modal for grounding / enrichment -->
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal">
             <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -250,13 +649,16 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js?v=20260513-custom-ner-labels"></script>
-    <script src="/static/js/documents.js?v=20260513-custom-ner-labels"></script>
-    <script src="/static/js/entities.js?v=20260513-custom-ner-labels"></script>
-    <script src="/static/js/ontology.js?v=20260513-custom-ner-labels"></script>
+    <script src="/static/js/app.js?v=20260528-pdf-annotations"></script>
+    <script src="/static/js/document-manager.js?v=20260527-eias-suite"></script>
+    <script src="/static/js/documents.js?v=20260528-pdf-workspace"></script>
+    <script src="/static/js/entities.js?v=20260527-eias-suite"></script>
+    <script src="/static/js/ontology.js?v=20260527-eias-suite"></script>
     <script src="/static/js/grounding.js?v=20260504-grounding"></script>
     <script src="/static/js/enrichment.js?v=20260512-docview-settings"></script>
-    <script src="/static/js/export.js?v=20260504-grounding"></script>
-    <script src="/static/js/profiles.js?v=20260513-custom-ner-labels"></script>
+    <script src="/static/js/database.js?v=20260527-database"></script>
+    <script src="/static/js/export.js?v=20260527-eias-suite"></script>
+    <script src="/static/js/settings.js?v=20260527-eias-suite"></script>
+    <script src="/static/js/topic-manager.js?v=20260527-eias-suite"></script>
 </body>
 </html>

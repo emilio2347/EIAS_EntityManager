@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -11,8 +10,15 @@ from rapidfuzz import fuzz
 from sqlalchemy.orm import Session
 
 from app.config import SPACY_MODEL, SPACY_MODEL_VERSION
-from app.models import Entity, Mention, OntologyMapping
+from app.models import (
+    Entity,
+    EntityMention,
+    OntologyMapping,
+    entity_alias_labels,
+    ensure_entity_profile,
+)
 from app.services.app_settings import get_pipeline_settings
+from app.services.corpus import create_processing_run, create_span_annotation
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +63,29 @@ def extract_entities(
     """Run NER on text, deduplicate against existing entities, and persist.
 
     Returns a list of dicts describing newly created/matched entities.
-    If `allowed_types` is provided, only entities with labels in that set are kept.
+    EntityManager now runs against the single shared corpus scope.
     """
     settings = get_pipeline_settings(db)
     nlp = get_nlp(settings.spacy_model, settings.coreference_enabled)
     doc = nlp(text)
+    from app.models import Article
+
+    article = db.query(Article).filter(Article.id == document_id).first()
+    if not article or not article.current_text_version:
+        raise ValueError(f"Article/text version not found for {document_id}")
+
+    run = create_processing_run(
+        db,
+        text_version_id=article.current_text_version.id,
+        profile_id=None,
+        tool_name="spacy_ner",
+        model_name=settings.spacy_model,
+        model_version=SPACY_MODEL_VERSION,
+        parameters={
+            "allowed_types": None,
+            "fuzzy_match_threshold": settings.fuzzy_match_threshold,
+        },
+    )
 
     # Load ontology mappings
     mappings: dict[str, str] = {}
@@ -73,9 +97,6 @@ def extract_entities(
     results: list[dict[str, Any]] = []
 
     for ent in doc.ents:
-        if allowed_types is not None and ent.label_ not in allowed_types:
-            continue
-
         # Find the enclosing sentence
         sentence_text = ent.sent.text if ent.sent else ""
 
@@ -85,18 +106,27 @@ def extract_entities(
             name=ent.text,
             label=ent.label_,
             ontology_uri=mappings.get(ent.label_),
-            profile_id=profile_id,
+            profile_id=None,
             fuzzy_match_threshold=settings.fuzzy_match_threshold,
         )
 
         # Create mention
-        mention = Mention(
-            entity_id=entity.id,
-            document_id=document_id,
-            surface_form=ent.text,
+        annotation = create_span_annotation(
+            db,
+            processing_run_id=run.id,
+            text_version_id=article.current_text_version.id,
+            annotation_type="entity",
             start_char=ent.start_char,
             end_char=ent.end_char,
-            sentence=sentence_text,
+            exact_text=ent.text,
+            motivation="identifying",
+            body={"label": ent.label_, "sentence": sentence_text},
+        )
+        mention = EntityMention(
+            annotation_id=annotation.id,
+            entity_id=entity.id,
+            surface_form=ent.text,
+            linking_method="exact_or_fuzzy",
         )
         db.add(mention)
 
@@ -115,14 +145,7 @@ def extract_entities(
 
 
 def _alt_labels_of(entity: Entity) -> list[str]:
-    raw = entity.alternative_labels or "[]"
-    try:
-        data = json.loads(raw)
-        if isinstance(data, list):
-            return [str(x) for x in data if x]
-    except (ValueError, TypeError):
-        pass
-    return []
+    return entity_alias_labels(entity)
 
 
 def _find_or_create_entity(
@@ -147,18 +170,14 @@ def _find_or_create_entity(
         .filter(
             Entity.canonical_name == name,
             Entity.entity_type == label,
-            Entity.profile_id == profile_id,
         )
         .first()
     )
     if existing:
         return existing
 
-    candidates = (
-        db.query(Entity)
-        .filter(Entity.entity_type == label, Entity.profile_id == profile_id)
-        .all()
-    )
+    candidates_query = db.query(Entity).filter(Entity.entity_type == label)
+    candidates = candidates_query.all()
 
     # Exact match against any alt label
     for candidate in candidates:
@@ -174,12 +193,11 @@ def _find_or_create_entity(
 
     # Create new
     entity = Entity(
-        profile_id=profile_id,
         canonical_name=name,
         entity_type=label,
         ontology_class_uri=ontology_uri,
-        alternative_labels="[]",
     )
     db.add(entity)
     db.flush()  # get ID
+    ensure_entity_profile(db, entity, None)
     return entity

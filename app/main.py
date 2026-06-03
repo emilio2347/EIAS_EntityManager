@@ -1,4 +1,4 @@
-"""EIAS Entity Manager — FastAPI application entry point."""
+"""EIAS suite — FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,26 +7,41 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.database import create_tables
-from app.routers import documents, entities, ontology, grounding, enrichment, export, profiles, settings
+from app.database import assert_runtime_database_ready
+from app.routers import (
+    corpus,
+    database_view,
+    document_manager,
+    enrichment,
+    entities,
+    export,
+    grounding,
+    ontology,
+    profiles,
+    settings,
+    topic_manager,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
-    create_tables()
+    assert_runtime_database_ready()
     yield
 
 
 app = FastAPI(
-    title="EIAS Entity Manager",
-    description="Named-entity extraction, grounding, and knowledge management",
+    title="EIAS",
+    description="Document, entity, and topic management for the EIAS corpus",
     version="0.1.0",
     lifespan=lifespan,
 )
 
 # --- Routers ---
-app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+app.include_router(document_manager.router, prefix="/api/document-manager", tags=["document-manager"])
+app.include_router(corpus.router, prefix="/api/corpus", tags=["corpus"])
+app.include_router(topic_manager.router, prefix="/api/topic-manager", tags=["topic-manager"])
+app.include_router(database_view.router, prefix="/api/database", tags=["database"])
 app.include_router(entities.router, prefix="/api/entities", tags=["entities"])
 app.include_router(ontology.router, prefix="/api/ontology", tags=["ontology"])
 app.include_router(grounding.router, prefix="/api/grounding", tags=["grounding"])

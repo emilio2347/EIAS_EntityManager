@@ -24,9 +24,7 @@ async function clearAllEntities() {
     if (second !== 'DELETE') return;
 
     try {
-        const profileId = getActiveProfileId();
         const params = new URLSearchParams();
-        if (profileId) params.set('profile_id', profileId);
         const result = await api(`/entities?${params}`, { method: 'DELETE' });
         document.getElementById('entity-detail')?.classList.add('hidden');
         await loadEntities();
@@ -47,15 +45,13 @@ async function loadEntities() {
     const grounded = document.getElementById('entity-grounded-filter')?.value || '';
     const ontologyLinked = document.getElementById('entity-ontology-filter')?.value || '';
     const documentId = document.getElementById('entity-document-filter')?.value || '';
-    const profileId = getActiveProfileId();
 
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (entityType) params.set('entity_type', entityType);
-    if (grounded) params.set('grounded', grounded);
+    if (grounded) params.set('grounding_status', grounded === 'yes' ? 'grounded' : 'ungrounded');
     if (ontologyLinked) params.set('ontology_linked', ontologyLinked);
-    if (documentId) params.set('document_id', documentId);
-    if (profileId) params.set('profile_id', profileId);
+    if (documentId) params.set('article_id', documentId);
 
     try {
         const entities = await api(`/entities?${params}`);
@@ -393,8 +389,6 @@ async function searchMergeTargets() {
     try {
         const params = new URLSearchParams();
         if (q) params.set('q', q);
-        const profileId = getActiveProfileId();
-        if (profileId) params.set('profile_id', profileId);
         const all = await api(`/entities?${params}`);
         const candidates = all.filter(e => e.id !== _mergeSourceId).slice(0, 50);
 

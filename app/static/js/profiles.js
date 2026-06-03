@@ -47,10 +47,6 @@ async function loadKnownNerTypes() {
 
 async function loadSettingsView() {
     await loadKnownNerTypes();
-    await loadActiveProfileSelect();
-    renderTypeCheckboxes(new Set());
-    resetProfileForm();
-    await renderProfileList();
     await loadStandardTriplesSettings();
     await loadPipelineSettings();
 }
@@ -161,6 +157,7 @@ async function editProfile(profileId) {
 
 
 function resetProfileForm() {
+    if (!document.getElementById('profile-form-title')) return;
     _editingProfileId = null;
     document.getElementById('profile-form-title').textContent = 'New Profile';
     document.getElementById('profile-id').value = '';

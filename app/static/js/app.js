@@ -1,15 +1,21 @@
 /* ========================================
-   EIAS Entity Manager — App Router & Shared Utilities
+   EIAS — App Router & Shared Utilities
    ======================================== */
 
-// All known NER entity types. Updated from /api/profiles/types on load.
 let ENTITY_TYPES = [
     'PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT',
     'DATE', 'NORP', 'FAC', 'PRODUCT', 'LAW', 'LANGUAGE',
     'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', 'PERCENT', 'TIME', 'MISC', 'CONCEPT',
 ];
 
-let _activeProfile = null;
+const APP_DEFAULT_VIEWS = {
+    'document-manager': 'dm-ingest',
+    'entity-manager': 'entities',
+    'topic-manager': 'tm-article-topics',
+    'database': 'database-tables',
+    'export': 'export',
+    'settings': 'settings-entity-manager',
+};
 
 function applyUiTheme(theme) {
     const liquidGlassEnabled = theme === 'liquid-glass';
@@ -31,6 +37,11 @@ function initializeUiTheme() {
         localStorage.setItem('eias.uiTheme', nextTheme);
         applyUiTheme(nextTheme);
     });
+}
+
+async function loadKnownNerTypes() {
+    setEntityTypes(ENTITY_TYPES);
+    return ENTITY_TYPES;
 }
 
 function setEntityTypes(types) {
@@ -63,42 +74,86 @@ function populateEntityTypeSelects() {
     }
 }
 
-// Navigation
-document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Update nav active state
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+function currentAppForView(viewName) {
+    const target = document.getElementById(`view-${viewName}`);
+    return target?.dataset.app || 'document-manager';
+}
 
-        // Show the correct view
-        const viewName = btn.dataset.view;
-        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-        const target = document.getElementById(`view-${viewName}`);
-        if (target) {
-            target.classList.remove('hidden');
-            target.classList.add('active');
-        }
+function switchApp(appName, preferredView = '') {
+    const viewName = preferredView || APP_DEFAULT_VIEWS[appName] || 'dm-ingest';
 
-        // Trigger refresh on view activation
-        if (viewName === 'documents') {
-            loadDocuments();
-            updateActiveProfileLabels();
-        }
-        if (viewName === 'document-view') {
-            loadDocumentViewOptions();
-        }
-        if (viewName === 'entities') {
-            loadDocumentFilterOptions();
-            loadEntities();
-        }
-        if (viewName === 'ontology') loadOntologyData();
-        if (viewName === 'settings') loadSettingsView();
-        if (viewName === 'export') updateExportProfileSummary();
+    document.querySelectorAll('.app-nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.app === appName);
     });
-});
 
+    document.querySelectorAll('.subnav-btn').forEach(btn => {
+        const matchesApp = btn.dataset.app === appName;
+        btn.classList.toggle('hidden', !matchesApp);
+        btn.classList.toggle('active', matchesApp && btn.dataset.view === viewName);
+    });
 
-// --- Shared Utilities ---
+    switchView(viewName, { updateApp: false });
+}
+
+function switchView(viewName, options = {}) {
+    const target = document.getElementById(`view-${viewName}`);
+    if (!target) return;
+    const appName = currentAppForView(viewName);
+    if (options.updateApp !== false) {
+        switchApp(appName, viewName);
+        return;
+    }
+
+    document.querySelectorAll('.view').forEach(v => {
+        v.classList.add('hidden');
+        v.classList.remove('active');
+    });
+    target.classList.remove('hidden');
+    target.classList.add('active');
+
+    document.querySelectorAll('.subnav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.app === appName && btn.dataset.view === viewName);
+    });
+
+    refreshView(viewName);
+}
+
+function refreshView(viewName) {
+    if (viewName === 'dm-articles') loadDocumentManagerArticles?.();
+    if (viewName === 'dm-renderer') loadDocumentManagerArticleOptions?.('dm-renderer-select');
+    if (viewName === 'dm-metadata') loadEntityMetadataOptions?.();
+    if (viewName === 'dm-pdf-annotations') loadPdfAnnotationArticleOptions?.();
+    if (viewName === 'dm-annotations') loadDocumentManagerArticleOptions?.('dm-annotations-article-select');
+    if (viewName === 'dm-pipeline') loadDocumentManagerPipeline?.();
+    if (viewName === 'document-view') loadDocumentViewOptions?.();
+    if (viewName === 'grounding-enrichment') loadEntities?.();
+    if (viewName === 'entities') {
+        loadDocumentFilterOptions?.();
+        loadEntities?.();
+    }
+    if (viewName === 'ontology') loadOntologyData?.();
+    if (viewName === 'settings-entity-manager') loadSettingsView?.();
+    if (viewName === 'settings-document-manager') loadDocumentManagerSettings?.();
+    if (viewName === 'settings-topic-manager') loadTopicManagerSettings?.();
+    if (viewName === 'database-tables') loadDatabaseTables?.();
+    if (viewName === 'export') {
+        updateExportSummary?.();
+        renderExportEntityTypes?.();
+    }
+    if (viewName === 'tm-article-topics') loadTopicArticleOptions?.();
+    if (viewName === 'tm-keyterm-renderer') loadTopicRendererOptions?.();
+    if (viewName === 'tm-fast-review') loadTopicReviewOptions?.();
+    if (viewName === 'tm-schemas') loadTopicSchemas?.();
+}
+
+function initializeNavigation() {
+    document.querySelectorAll('.app-nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchApp(btn.dataset.app));
+    });
+    document.querySelectorAll('.subnav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+    });
+}
 
 async function api(path, options = {}) {
     const resp = await fetch(`/api${path}`, {
@@ -124,12 +179,6 @@ async function apiUpload(path, formData) {
     return resp.json();
 }
 
-/**
- * Render an entity type tag.
- *
- * @param {string} type       - The NER label (e.g. "PERSON")
- * @param {string} [entityId] - If provided, tag becomes clickable to change the type
- */
 function entityTypeTag(type, entityId) {
     const colorTypes = ['PERSON', 'ORG', 'GPE', 'LOC', 'WORK_OF_ART', 'EVENT', 'CONCEPT'];
     const cls = colorTypes.includes(type) ? `tag-${type}` : 'tag-default';
@@ -140,27 +189,19 @@ function entityTypeTag(type, entityId) {
     return `<span class="tag ${cls}">${type}</span>`;
 }
 
-
-/**
- * Open an inline dropdown to change an entity's type.
- * Replaces the tag element with a <select> that auto-saves on change.
- */
 function openTypeEditor(entityId, currentType, tagElement) {
-    // Don't open if already editing
     if (tagElement.dataset.editing === 'true') return;
 
     const select = document.createElement('select');
     select.className = 'type-editor-select';
     select.innerHTML = entityTypeOptionsHtml(currentType, false);
 
-    // Replace the tag with the select
     tagElement.replaceWith(select);
     select.focus();
 
     async function commitChange() {
         const newType = select.value;
         if (newType === currentType) {
-            // Revert to tag — re-render
             const newTag = document.createElement('span');
             newTag.innerHTML = entityTypeTag(newType, entityId);
             select.replaceWith(newTag.firstElementChild);
@@ -172,13 +213,10 @@ function openTypeEditor(entityId, currentType, tagElement) {
                 method: 'PATCH',
                 body: JSON.stringify({ entity_type: newType }),
             });
-
-            // Refresh everything that might show this entity
-            loadEntities();
-            showEntityDetail(entityId);
+            loadEntities?.();
+            showEntityDetail?.(entityId);
         } catch (err) {
             alert('Error changing type: ' + err.message);
-            // Revert
             const newTag = document.createElement('span');
             newTag.innerHTML = entityTypeTag(currentType, entityId);
             select.replaceWith(newTag.firstElementChild);
@@ -189,39 +227,18 @@ function openTypeEditor(entityId, currentType, tagElement) {
     select.addEventListener('blur', commitChange);
 }
 
-
 function groundingDot(entity) {
     const grounded = entity.wikidata_uri || entity.dbpedia_uri || entity.worldcat_uri;
     return `<span class="grounding-dot ${grounded ? 'grounded' : 'ungrounded'}" title="${grounded ? 'Grounded' : 'Ungrounded'}"></span>`;
 }
 
-function getActiveProfileId() {
-    const select = document.getElementById('settings-active-profile-select');
-    return select?.value || _activeProfile?.id || localStorage.getItem('eias.activeProfileId') || '';
+function updateSharedScopeLabels() {
+    updateExportSummary();
 }
 
-function getActiveProfileName() {
-    const select = document.getElementById('settings-active-profile-select');
-    if (select && select.selectedOptions.length) {
-        return select.selectedOptions[0].textContent.replace(' (default)', '');
-    }
-    return _activeProfile?.name || 'No profile';
-}
-
-function updateActiveProfileLabels() {
-    const label = getActiveProfileName();
-    const uploadLabel = document.getElementById('upload-profile-label');
-    if (uploadLabel) uploadLabel.textContent = `Profile: ${label}`;
-
-    const summary = document.getElementById('active-profile-summary');
-    if (summary) summary.textContent = label ? `Current track: ${label}` : '';
-
-    updateExportProfileSummary();
-}
-
-function updateExportProfileSummary() {
-    const el = document.getElementById('export-profile-summary');
-    if (el) el.textContent = `Download entities from the active profile: ${getActiveProfileName()}.`;
+function updateExportSummary() {
+    const el = document.getElementById('export-summary');
+    if (el) el.textContent = 'Download all entities from the shared corpus database.';
 }
 
 function showStatus(elementId, message, type = '') {
@@ -242,13 +259,13 @@ function closeModal() {
     document.getElementById('modal-content').innerHTML = '';
 }
 
-// Close modal on overlay click
 document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal();
 });
 
-// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     initializeUiTheme();
-    loadSettingsView();
+    initializeNavigation();
+    loadKnownNerTypes();
+    switchApp('document-manager', 'dm-ingest');
 });

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from typing import Any
+from typing import Any, Literal
 
 import spacy
 from pydantic import BaseModel, Field
@@ -14,6 +14,7 @@ from app.config import FUZZY_MATCH_THRESHOLD, SPACY_MODEL, SPACY_MODEL_VERSION
 from app.models import AppSetting
 
 PIPELINE_SETTINGS_KEY = "pipeline.settings"
+TOPIC_MANAGER_SETTINGS_KEY = "topic_manager.settings"
 
 
 class PipelineSettings(BaseModel):
@@ -25,6 +26,17 @@ class PipelineSettings(BaseModel):
     grounding_search_limit: int = Field(default=5, ge=1, le=25)
     external_request_timeout: int = Field(default=15, ge=5, le=120)
     wikidata_type_filter_enabled: bool = True
+
+
+class TopicManagerSettings(BaseModel):
+    """Runtime-tunable settings for TopicManager keyword extraction."""
+
+    max_keywords: int = Field(default=40, ge=1, le=100)
+    min_phrase_chars: int = Field(default=3, ge=1, le=80)
+    max_phrase_words: int = Field(default=5, ge=1, le=12)
+    unigram_mode: Literal["none", "proper_nouns_only", "all_nouns"] = "proper_nouns_only"
+    fast_autocache_limit: int = Field(default=15, ge=0, le=50)
+    fast_autocache_rows: int = Field(default=5, ge=1, le=20)
 
 
 def _model_dict(model: BaseModel) -> dict[str, Any]:
@@ -64,6 +76,35 @@ def set_pipeline_settings(db: Session, data: dict[str, Any]) -> PipelineSettings
         setting.value = value
     else:
         db.add(AppSetting(key=PIPELINE_SETTINGS_KEY, value=value))
+    db.commit()
+    return updated
+
+
+def get_topic_manager_settings(db: Session) -> TopicManagerSettings:
+    setting = db.query(AppSetting).filter(AppSetting.key == TOPIC_MANAGER_SETTINGS_KEY).first()
+    if not setting:
+        return TopicManagerSettings()
+    try:
+        data = json.loads(setting.value)
+    except (TypeError, ValueError):
+        return TopicManagerSettings()
+    if not isinstance(data, dict):
+        return TopicManagerSettings()
+    return TopicManagerSettings(**data)
+
+
+def set_topic_manager_settings(db: Session, data: dict[str, Any]) -> TopicManagerSettings:
+    current = get_topic_manager_settings(db)
+    merged = _model_dict(current)
+    merged.update(data)
+    updated = TopicManagerSettings(**merged)
+
+    setting = db.query(AppSetting).filter(AppSetting.key == TOPIC_MANAGER_SETTINGS_KEY).first()
+    value = _model_json(updated)
+    if setting:
+        setting.value = value
+    else:
+        db.add(AppSetting(key=TOPIC_MANAGER_SETTINGS_KEY, value=value))
     db.commit()
     return updated
 

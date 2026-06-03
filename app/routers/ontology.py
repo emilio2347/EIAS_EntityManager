@@ -18,6 +18,21 @@ from app.services.ontology_manager import (
 )
 
 router = APIRouter()
+ALLOWED_REVIEW_STATUSES = {
+    "machine_generated",
+    "needs_review",
+    "accepted",
+    "rejected",
+    "manually_created",
+    "superseded",
+}
+
+
+def _clean_review_status(value: str) -> str:
+    status = (value or "").strip().lower()
+    if status not in ALLOWED_REVIEW_STATUSES:
+        raise HTTPException(400, f"review_status must be one of: {', '.join(sorted(ALLOWED_REVIEW_STATUSES))}")
+    return status
 
 
 @router.post("/upload")
@@ -103,6 +118,7 @@ def get_mappings(db: Session = Depends(get_db)):
             "spacy_label": m.spacy_label,
             "ontology_class_uri": m.ontology_class_uri,
             "ontology_class_label": m.ontology_class_label,
+            "review_status": m.review_status,
         }
         for m in mappings
     ]
@@ -112,6 +128,10 @@ class MappingCreate(BaseModel):
     spacy_label: str
     ontology_class_uri: str
     ontology_class_label: str = ""
+
+
+class ReviewStatusRequest(BaseModel):
+    review_status: str
 
 
 @router.post("/mappings")
@@ -150,6 +170,21 @@ def create_mapping(body: MappingCreate, db: Session = Depends(get_db)):
 
     db.commit()
     return {"status": status, "id": mapping_id, "entities_updated": affected}
+
+
+@router.patch("/mappings/{mapping_id}/review-status")
+def update_mapping_review_status(
+    mapping_id: str,
+    body: ReviewStatusRequest,
+    db: Session = Depends(get_db),
+):
+    """Update curation review status for one ontology mapping."""
+    mapping = db.query(OntologyMapping).filter(OntologyMapping.id == mapping_id).first()
+    if not mapping:
+        raise HTTPException(404, "Mapping not found")
+    mapping.review_status = _clean_review_status(body.review_status)
+    db.commit()
+    return {"status": "updated", "mapping_id": mapping.id, "review_status": mapping.review_status}
 
 
 @router.delete("/mappings/{mapping_id}")

@@ -2,18 +2,39 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Entity, EnrichmentProperty
+from app.models import Entity, EntityGroundingCandidate, EnrichmentProperty
 from app.services.grounding_wikidata import search_wikidata
 from app.services.grounding_worldcat import search_worldcat
 from app.services.app_settings import get_pipeline_settings
 from app.services.standard_triples import apply_grounding_derivatives
 
 router = APIRouter()
+
+
+def _candidate_uri(candidate: dict) -> str | None:
+    uri = candidate.get("uri") or candidate.get("candidate_uri")
+    return str(uri) if uri else None
+
+
+def _filter_rejected_candidates(entity_id: str, authority: str, candidates: list[dict], db: Session) -> list[dict]:
+    rejected = {
+        row[0]
+        for row in db.query(EntityGroundingCandidate.candidate_uri)
+        .filter(
+            EntityGroundingCandidate.entity_id == entity_id,
+            EntityGroundingCandidate.authority == authority,
+            EntityGroundingCandidate.review_status == "rejected",
+        )
+        .all()
+    }
+    return [candidate for candidate in candidates if _candidate_uri(candidate) not in rejected]
 
 
 @router.post("/{entity_id}/search")
@@ -42,6 +63,8 @@ async def search_grounding(entity_id: str, db: Session = Depends(get_db)):
         timeout=settings.external_request_timeout,
         type_filter_enabled=settings.wikidata_type_filter_enabled,
     )
+    wikidata_results = _filter_rejected_candidates(entity.id, "wikidata", wikidata_results, db)
+    worldcat_results = _filter_rejected_candidates(entity.id, "worldcat", worldcat_results, db)
 
     return {
         "entity_id": entity.id,
@@ -64,6 +87,14 @@ class ConfirmGrounding(BaseModel):
     dbpedia_uri: str | None = None
     worldcat_uri: str | None = None
     replace_enrichment: bool = True
+
+
+class RejectGroundingCandidate(BaseModel):
+    candidate_uri: str
+    authority: str
+    label: str | None = None
+    score: float | None = None
+    raw_candidate: dict | None = None
 
 
 def _delete_entity_enrichment(entity_id: str, db: Session) -> int:
@@ -133,6 +164,52 @@ async def confirm_grounding(
         "standard_triples_imported": len(derivatives["imported"]),
         "removed_enrichment_count": removed_enrichment_count,
     }
+
+
+@router.post("/{entity_id}/reject")
+async def reject_grounding_candidate(
+    entity_id: str,
+    body: RejectGroundingCandidate,
+    db: Session = Depends(get_db),
+):
+    """Record a rejected grounding candidate so it is not suggested again."""
+    entity = db.query(Entity).filter(Entity.id == entity_id).first()
+    if not entity:
+        raise HTTPException(404, "Entity not found")
+
+    candidate_uri = body.candidate_uri.strip()
+    authority = body.authority.strip().lower()
+    if not candidate_uri or not authority:
+        raise HTTPException(400, "candidate_uri and authority are required")
+
+    existing = (
+        db.query(EntityGroundingCandidate)
+        .filter(
+            EntityGroundingCandidate.entity_id == entity_id,
+            EntityGroundingCandidate.candidate_uri == candidate_uri,
+        )
+        .first()
+    )
+    if existing:
+        existing.review_status = "rejected"
+        existing.authority = authority
+        existing.label = body.label
+        existing.score = body.score
+        existing.raw_candidate = body.raw_candidate and json.dumps(body.raw_candidate, ensure_ascii=False)
+    else:
+        db.add(
+            EntityGroundingCandidate(
+                entity_id=entity_id,
+                candidate_uri=candidate_uri,
+                authority=authority,
+                label=body.label,
+                score=body.score,
+                review_status="rejected",
+                raw_candidate=body.raw_candidate and json.dumps(body.raw_candidate, ensure_ascii=False),
+            )
+        )
+    db.commit()
+    return {"status": "rejected", "entity_id": entity_id, "candidate_uri": candidate_uri}
 
 
 @router.delete("/{entity_id}")

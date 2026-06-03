@@ -13,8 +13,10 @@ from app.services.standard_triples import (
     set_enabled_standard_property_ids,
 )
 from app.services.app_settings import (
+    get_topic_manager_settings,
     pipeline_runtime_status,
     set_pipeline_settings,
+    set_topic_manager_settings,
 )
 
 router = APIRouter()
@@ -73,4 +75,35 @@ def update_pipeline_settings(
     return {
         "settings": updated.model_dump() if hasattr(updated, "model_dump") else updated.dict(),
         "status": pipeline_runtime_status(db),
+    }
+
+
+@router.get("/topic-manager")
+def get_topic_manager_settings_endpoint(db: Session = Depends(get_db)):
+    """Get TopicManager keyword extraction settings."""
+    settings = get_topic_manager_settings(db)
+    return {
+        "settings": settings.model_dump() if hasattr(settings, "model_dump") else settings.dict(),
+    }
+
+
+class TopicManagerSettingsUpdate(BaseModel):
+    max_keywords: int | None = None
+    min_phrase_chars: int | None = None
+    max_phrase_words: int | None = None
+    unigram_mode: str | None = None
+    fast_autocache_limit: int | None = None
+    fast_autocache_rows: int | None = None
+
+
+@router.put("/topic-manager")
+def update_topic_manager_settings(
+    body: TopicManagerSettingsUpdate,
+    db: Session = Depends(get_db),
+):
+    """Persist TopicManager keyword extraction settings."""
+    data = body.model_dump(exclude_none=True) if hasattr(body, "model_dump") else body.dict(exclude_none=True)
+    updated = set_topic_manager_settings(db, data)
+    return {
+        "settings": updated.model_dump() if hasattr(updated, "model_dump") else updated.dict(),
     }

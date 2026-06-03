@@ -7,14 +7,22 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 ONTOLOGY_DIR = DATA_DIR / "ontology"
+TEXT_VERSION_DIR = DATA_DIR / "text_versions"
+SOURCE_FILE_DIR = DATA_DIR / "source_files"
 DB_PATH = DATA_DIR / "eias_entities.db"
 
 # Ensure directories exist
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 ONTOLOGY_DIR.mkdir(parents=True, exist_ok=True)
+TEXT_VERSION_DIR.mkdir(parents=True, exist_ok=True)
+SOURCE_FILE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Database
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://emiliosuarezhode@localhost:5432/eias_database",
+)
+SQLITE_LEGACY_DB_PATH = Path(os.getenv("SQLITE_LEGACY_DB_PATH", str(DB_PATH)))
 
 # spaCy model
 SPACY_MODEL = os.getenv("SPACY_MODEL", "en_core_web_lg")

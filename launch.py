@@ -14,10 +14,24 @@ import socket
 import threading
 import webbrowser
 import subprocess
+from pathlib import Path
 
 HOST = "127.0.0.1"
 PORT = 8000
 URL = f"http://{HOST}:{PORT}"
+
+
+def resolve_python(script_dir: str) -> str:
+    """Use the project virtualenv when present so app dependencies are available."""
+    root = Path(script_dir)
+    candidates = [
+        root / ".venv" / "bin" / "python",
+        root / "venv" / "bin" / "python",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return sys.executable
 
 
 def find_free_port(start: int = 8000, end: int = 8100) -> int:
@@ -49,6 +63,7 @@ def main():
     # Resolve paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
+    python_executable = resolve_python(script_dir)
 
     # Find a free port
     port = find_free_port(PORT)
@@ -56,12 +71,13 @@ def main():
 
     print(f"EIAS Entity Manager")
     print(f"Starting server on {url} ...")
+    print(f"Using Python: {python_executable}")
     print(f"Press Ctrl+C to stop.\n")
 
     # Start uvicorn as a subprocess
     server = subprocess.Popen(
         [
-            sys.executable, "-m", "uvicorn",
+            python_executable, "-m", "uvicorn",
             "app.main:app",
             "--host", HOST,
             "--port", str(port),

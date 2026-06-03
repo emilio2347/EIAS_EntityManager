@@ -11,6 +11,21 @@ from app.models import Entity, EnrichmentProperty
 from app.services.enrichment import get_available_properties, import_properties
 
 router = APIRouter()
+ALLOWED_REVIEW_STATUSES = {
+    "machine_generated",
+    "needs_review",
+    "accepted",
+    "rejected",
+    "manually_created",
+    "superseded",
+}
+
+
+def _clean_review_status(value: str) -> str:
+    status = (value or "").strip().lower()
+    if status not in ALLOWED_REVIEW_STATUSES:
+        raise HTTPException(400, f"review_status must be one of: {', '.join(sorted(ALLOWED_REVIEW_STATUSES))}")
+    return status
 
 
 @router.get("/{entity_id}/available")
@@ -34,6 +49,10 @@ async def available_properties(entity_id: str, db: Session = Depends(get_db)):
 
 class ImportRequest(BaseModel):
     properties: list[dict]
+
+
+class ReviewStatusRequest(BaseModel):
+    review_status: str
 
 
 @router.post("/{entity_id}/import")
@@ -77,3 +96,26 @@ def delete_enrichment_property(
     db.delete(prop)
     db.commit()
     return {"status": "deleted", "property_id": property_id}
+
+
+@router.patch("/{entity_id}/properties/{property_id}/review-status")
+def update_enrichment_review_status(
+    entity_id: str,
+    property_id: str,
+    body: ReviewStatusRequest,
+    db: Session = Depends(get_db),
+):
+    """Update curation review status for one imported enrichment property."""
+    prop = (
+        db.query(EnrichmentProperty)
+        .filter(
+            EnrichmentProperty.id == property_id,
+            EnrichmentProperty.entity_id == entity_id,
+        )
+        .first()
+    )
+    if not prop:
+        raise HTTPException(404, "Enrichment property not found")
+    prop.review_status = _clean_review_status(body.review_status)
+    db.commit()
+    return {"status": "updated", "property_id": prop.id, "review_status": prop.review_status}
